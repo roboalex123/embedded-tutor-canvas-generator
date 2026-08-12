@@ -125,7 +125,18 @@ h1 {
 }
 .field { display: flex; flex-direction: column; gap: 6px; }
 .field.full { grid-column: 1 / -1; }
-label, .labelText { font-weight: 700; }
+.labelText { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; }
+.infoTip {
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface-alt);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1;
+  padding: 0;
+}
 input, textarea, select {
   width: 100%;
   border: 1px solid var(--border);
@@ -199,11 +210,6 @@ input:focus, textarea:focus, select:focus, button:focus, a:focus {
 }
 .switchLabel input { width: auto; }
 .inlineSwitch { min-height: 0; }
-.sectionToggleGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
 .disabled {
   opacity: 0.72;
 }
@@ -213,19 +219,109 @@ input:focus, textarea:focus, select:focus, button:focus, a:focus {
 .serviceGrid {
   grid-template-columns: 1.15fr 1fr 1fr;
 }
-.sectionHeaderGrid {
-  grid-template-columns: 1.2fr 1fr 1fr;
-}
-.hourRow {
-  margin-top: 10px;
-}
 .topGrid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 .swatchGrid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
+.colorPair {
+  display: grid;
+  grid-template-columns: 18px 44px 1fr;
+  gap: 8px;
+  align-items: center;
+}
+.colorPreview {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+.colorPair input[type="color"] {
+  width: 44px;
+  height: 36px;
+  padding: 2px;
+}
+.colorField input[type="text"] { min-width: 0; }
+.contactMethodCard { position: relative; }
+.methodHead { align-items: center; }
+.methodTitle { display: flex; gap: 10px; align-items: center; }
+.iconBadge {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  background: #e2e8f0;
+  color: #0f172a;
+  flex: 0 0 auto;
+}
+.contactCustomGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.contactBadge {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.10);
+  color: var(--hero-text);
+  text-decoration: none;
+  min-height: 60px;
+}
+.contactBadge:hover { border-color: rgba(255,255,255,0.40); }
+.contactBadge .contactLabel { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.contactBadge .contactLabel span { opacity: 0.92; font-size: 13px; word-break: break-word; }
+.contactBadge strong { font-size: 14px; }
+.sectionLocalHead { margin-bottom: 10px; }
+.sectionOffNote {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--surface-alt);
+  color: var(--muted);
+  border: 1px dashed var(--border);
+}
 .filePicker input { padding: 8px 12px; }
+
+[data-theme="dark"] {
+  --bg: #0b1220;
+  --surface: #0f172a;
+  --surface-alt: #111c33;
+  --text: #e5eefb;
+  --muted: #9fb1cf;
+  --border: #27344f;
+  --accent: #60a5fa;
+  --accent-2: #2dd4bf;
+  --shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
+}
+[data-theme="dark"] body {
+  background: linear-gradient(180deg, #07111f 0%, var(--bg) 24%, #050b15 100%);
+}
+[data-theme="dark"] .card,
+[data-theme="dark"] .rowCard,
+[data-theme="dark"] .introCard,
+[data-theme="dark"] .guideCard {
+  background: linear-gradient(180deg, #0f172a 0%, #111b31 100%);
+}
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+  background: #0b1220;
+  color: var(--text);
+}
+[data-theme="dark"] .pill { background: #17233c; border-color: #2d3c5f; }
+[data-theme="dark"] .notice { background: #122138; border-color: #244369; color: var(--text); }
+[data-theme="dark"] .iconBadge { background: #1f2a44; color: #e5eefb; }
+[data-theme="dark"] .infoTip { background: #16233e; color: var(--accent); }
+[data-theme="dark"] .contactBadge { background: rgba(15, 23, 42, 0.65); border-color: rgba(255,255,255,0.16); }
+[data-theme="dark"] .contactBadge:hover { border-color: rgba(255,255,255,0.30); }
+[data-theme="dark"] .previewFrame { background: #0b1220; }
 
 @media (max-width: 1080px) {
   .siteHeader, .appShell { width: min(100% - 24px, 1260px); }
@@ -234,7 +330,8 @@ input:focus, textarea:focus, select:focus, button:focus, a:focus {
 
 @media (max-width: 760px) {
   .siteHeader { flex-direction: column; }
-  .fieldGrid, .rowGrid, .rowGrid.three, .imageGrid, .serviceGrid, .sectionHeaderGrid, .topGrid, .swatchGrid, .sectionToggleGrid { grid-template-columns: 1fr; }
+  .fieldGrid, .rowGrid, .rowGrid.three, .imageGrid, .serviceGrid, .sectionHeaderGrid, .topGrid, .swatchGrid, .sectionToggleGrid, .contactCustomGrid { grid-template-columns: 1fr; }
   .previewFrame { min-height: 620px; }
   .outputBox { min-height: 360px; }
+  .colorPair { grid-template-columns: 18px 40px 1fr; }
 }

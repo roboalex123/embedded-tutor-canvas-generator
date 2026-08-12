@@ -56,6 +56,7 @@
   const defaultState = () => ({
     term: 'spring',
     palettePreset: 'spring',
+    editorTheme: 'dark',
     pageBg: presets.spring.pageBg,
     surface: presets.spring.surface,
     surfaceAlt: presets.spring.surfaceAlt,
@@ -252,18 +253,21 @@
     statusEl.textContent = message;
   };
 
-  const textField = (label, name, value, type = 'text', full = false) => `
+  const tipBadge = (tip) => tip ? `<button type="button" class="infoTip" title="${escapeHtml(tip)}" aria-label="${escapeHtml(tip)}">i</button>` : '';
+
+  const textField = (label, name, value, type = 'text', full = false, tip = '') => `
     <label class="field ${full ? 'full' : ''}">
-      <span class="labelText">${escapeHtml(label)}</span>
+      <span class="labelText">${escapeHtml(label)}${tipBadge(tip)}</span>
       ${type === 'textarea'
         ? `<textarea name="${escapeHtml(name)}">${escapeHtml(value)}</textarea>`
         : `<input type="${escapeHtml(type)}" name="${escapeHtml(name)}" value="${escapeHtml(value)}" />`}
     </label>`;
 
-  const colorField = (label, name, value) => `
+  const colorField = (label, name, value, tip = '') => `
     <label class="field colorField">
-      <span class="labelText">${escapeHtml(label)}</span>
+      <span class="labelText">${escapeHtml(label)}${tipBadge(tip)}</span>
       <span class="colorPair">
+        <span class="colorPreview" style="background:${escapeHtml(value)}"></span>
         <input type="color" name="${escapeHtml(name)}__color" value="${escapeHtml(value)}" aria-label="${escapeHtml(label)} color picker" />
         <input type="text" name="${escapeHtml(name)}" value="${escapeHtml(value)}" aria-label="${escapeHtml(label)} hex value" />
       </span>
@@ -282,7 +286,7 @@
     <section class="fieldGroup card ${state.sections[key] ? '' : 'disabled'}">
       <div class="sectionHead sectionLocalHead">
         <div>
-          <h3>${escapeHtml(title)}</h3>
+          <h3>${escapeHtml(title)}${tipBadge(note)}</h3>
           <p class="groupNote">${escapeHtml(note)}</p>
         </div>
         ${checkboxField('Show section', `sections.${key}`, Boolean(state.sections[key]))}
@@ -310,6 +314,7 @@
             <input type="text" name="contactMethods.${def.key}.value" value="${escapeHtml(item.value)}" />
           </label>
         </div>`;
+
     }).join('');
 
     const customContactCards = state.customContactMethods.map((item, index) => `
@@ -479,18 +484,18 @@
             <div class="setupNote">Everything below is editable. Nothing here is sacred.</div>
           </div>
           <div class="fieldGrid swatchGrid" style="margin-top: 12px;">
-            ${colorField('Hero start', 'heroStart', state.heroStart)}
-            ${colorField('Hero middle', 'heroMid', state.heroMid)}
-            ${colorField('Hero end', 'heroEnd', state.heroEnd)}
-            ${colorField('Hero text', 'heroText', state.heroText)}
-            ${colorField('Accent', 'accent', state.accent)}
-            ${colorField('Accent 2', 'accent2', state.accent2)}
-            ${colorField('Page background', 'pageBg', state.pageBg)}
-            ${colorField('Surface', 'surface', state.surface)}
-            ${colorField('Surface alt', 'surfaceAlt', state.surfaceAlt)}
-            ${colorField('Text', 'text', state.text)}
-            ${colorField('Muted text', 'muted', state.muted)}
-            ${colorField('Border', 'border', state.border)}
+            ${colorField('Hero start', 'heroStart', state.heroStart, 'Left side of the hero gradient.')}
+            ${colorField('Hero middle', 'heroMid', state.heroMid, 'Middle gradient stop.')}
+            ${colorField('Hero end', 'heroEnd', state.heroEnd, 'Right side of the hero gradient.')}
+            ${colorField('Hero text', 'heroText', state.heroText, 'Text used inside the hero banner.')}
+            ${colorField('Accent', 'accent', state.accent, 'Primary link and highlight color.')}
+            ${colorField('Accent 2', 'accent2', state.accent2, 'Secondary accent used in small labels.')}
+            ${colorField('Page background', 'pageBg', state.pageBg, 'Outer page background around the card.')}
+            ${colorField('Surface', 'surface', state.surface, 'Main card background.')}
+            ${colorField('Surface alt', 'surfaceAlt', state.surfaceAlt, 'Alternate block background.')}
+            ${colorField('Text', 'text', state.text, 'Main body text color.')}
+            ${colorField('Muted text', 'muted', state.muted, 'Subtle helper text color.')}
+            ${colorField('Border', 'border', state.border, 'Border lines and outlines.')}
           </div>
         </section>
 
