@@ -216,9 +216,9 @@ input:focus, textarea:focus, select:focus, button:focus, a:focus {
   justify-content: flex-start;
 }
 .heroImageFrame {
-  flex: 0 1 320px;
-  min-width: 240px;
-  max-width: 340px;
+  flex: 0 1 190px;
+  min-width: 160px;
+  max-width: 220px;
   display: flex;
   flex-direction: column;
   gap: 10px;

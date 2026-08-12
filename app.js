@@ -105,7 +105,7 @@
     canvasUrl: 'https://scccd.instructure.com/courses/108747',
     canvasLabel: 'Tutorial Center Canvas',
     images: [
-      { src: 'https://scccd.instructure.com/courses/108747/files/26143261/preview', alt: 'Robert Voss', caption: 'Tutor portrait' },
+      { src: '', alt: '', caption: '' },
     ],
     helpItems: [
       'Circuit checks: help with wiring, setup, and measurements',
@@ -653,6 +653,7 @@
   const buildFragment = () => {
     const theme = currentTheme();
     const images = state.images.filter((img) => img.src.trim());
+    const heroImage = images[0] || null;
     const hoursRows = state.hoursRows.filter((row) => row.day || row.time);
     const myHoursRows = state.myHoursRows.filter((row) => row.day || row.time);
 
@@ -677,13 +678,12 @@
           </div>
           ${contactHtml}
         </div>
-        ${state.images.filter((img) => img.src.trim()).length ? `
-          <div style="flex:0 1 320px; min-width:240px; max-width:340px; display:flex; flex-direction:column; gap:10px;">
-            ${state.images.filter((img) => img.src.trim()).slice(0, 1).map((img, index) => `
-              <figure style="margin:0; padding:10px; border-radius:14px; background:rgba(255,255,255,0.10); border:1px solid rgba(255,255,255,0.18);">
-                <img src="${escapeHtml(img.src)}" alt="${escapeHtml(img.alt || img.caption || `Hero image ${index + 1}`)}" style="width:100%; height:auto; display:block; border-radius:12px; border:1px solid rgba(255,255,255,0.18); object-fit:cover;" />
-                ${(img.caption || img.alt) ? `<figcaption style="margin-top:8px; font-size:13px; color:rgba(255,255,255,0.88);">${escapeHtml(img.caption || img.alt)}</figcaption>` : ''}
-              </figure>`).join('')}
+        ${heroImage ? `
+          <div class="heroImageFrame" style="flex:0 1 190px; min-width:160px; max-width:220px;">
+            <figure>
+              <img src="${escapeHtml(heroImage.src)}" alt="${escapeHtml(heroImage.alt || heroImage.caption || 'Hero image')}" />
+              ${(heroImage.caption || heroImage.alt) ? `<figcaption>${escapeHtml(heroImage.caption || heroImage.alt)}</figcaption>` : ''}
+            </figure>
           </div>` : ''}
       </section>` : '';
 
@@ -703,17 +703,6 @@
         </div>
       </section>` : '';
 
-    const imageHtml = state.sections.images && images.length ? `
-      <section style="margin-top:22px;">
-        <h2 style="margin:0 0 10px 0; font-size:22px; line-height:1.25; color:var(--text);">Images</h2>
-        <div style="display:flex; flex-wrap:wrap; gap:12px;">
-          ${images.map((img, index) => `
-            <figure style="margin:0; flex:1 1 280px; min-width:240px; padding:14px; border-radius:12px; background:var(--surface-alt); border:1px solid var(--border); color:var(--text);">
-              <img src="${escapeHtml(img.src)}" alt="${escapeHtml(img.alt || img.caption || `Image ${index + 1}`)}" style="width:100%; height:auto; display:block; border-radius:12px; border:1px solid var(--border);" />
-              ${(img.caption || img.alt) ? `<figcaption style="margin-top:8px; font-size:13.5px; color:var(--muted);">${escapeHtml(img.caption || img.alt)}</figcaption>` : ''}
-            </figure>`).join('')}
-        </div>
-      </section>` : '';
 
     const helpHtml = state.sections.help ? `
       <section style="margin-top:22px;">
@@ -743,15 +732,15 @@
       </section>` : '';
 
     const hoursHtml = state.sections.hours ? `
-      <section style="margin-top:22px;">
-        <h2 style="margin:0 0 10px 0; font-size:22px; line-height:1.25; color:var(--text);">${escapeHtml(state.hoursTitle || 'Hours')}</h2>
-        <div style="padding:14px; border-radius:12px; background:var(--surface-alt); border:1px solid var(--border); color:var(--text);">
+      <section style="margin-top:22px; padding:14px; border-radius:14px; background:${theme.surfaceAlt}; border:1px solid ${theme.border};">
+        <h2 style="margin:0 0 10px 0; font-size:22px; line-height:1.25; color:${theme.text};">${escapeHtml(state.hoursTitle || 'Hours')}</h2>
+        <div style="padding:0; border-radius:0; background:transparent; border:none; color:${theme.text};">
           ${hoursRows.map((row, index) => {
             const tags = [];
             if (row.online) tags.push('Online');
             if (row.inPerson) tags.push('In person');
             const noteHtml = row.note ? `<div style="margin-top:6px; font-size:13px; color:var(--muted);">${escapeHtml(row.note)}</div>` : '';
-            const tagsHtml = tags.length ? `<div style="margin-top:6px; display:flex; flex-wrap:wrap; gap:6px;">${tags.map((tag) => `<span style="display:inline-flex; align-items:center; padding:3px 8px; border-radius:999px; border:1px solid var(--border); font-size:12px; font-weight:700; color:var(--text); background:var(--surface);">${escapeHtml(tag)}</span>`).join('')}</div>` : '';
+            const tagsHtml = tags.length ? `<div style="margin-top:6px; display:flex; flex-wrap:wrap; gap:6px;">${tags.map((tag) => `<span style="display:inline-flex; align-items:center; padding:3px 8px; border-radius:999px; border:1px solid var(--border); font-size:12px; font-weight:700; color:var(--text); background:${theme.surface};">${escapeHtml(tag)}</span>`).join('')}</div>` : '';
             return `
               <div style="padding:12px 0; border-top:${index === 0 ? 'none' : '1px solid var(--border)'};">
                 <div style="display:flex; justify-content:space-between; gap:12px; align-items:baseline;">
@@ -767,15 +756,15 @@
       </section>` : '';
 
     const myHoursHtml = state.sections.myHours ? `
-      <section style="margin-top:22px;">
-        <h2 style="margin:0 0 10px 0; font-size:22px; line-height:1.25; color:var(--text);">${escapeHtml(state.myHoursTitle || 'My hours')}</h2>
-        <div style="padding:14px; border-radius:12px; background:var(--surface-alt); border:1px solid var(--border); color:var(--text);">
+      <section style="margin-top:22px; padding:14px; border-radius:14px; background:${theme.surface}; border:1px solid ${theme.accent2}; box-shadow:inset 4px 0 0 ${theme.accent2};">
+        <h2 style="margin:0 0 10px 0; font-size:22px; line-height:1.25; color:${theme.accent};">${escapeHtml(state.myHoursTitle || 'My hours')}</h2>
+        <div style="padding:0; border-radius:0; background:transparent; border:none; color:${theme.text};">
           ${myHoursRows.map((row, index) => {
             const tags = [];
             if (row.online) tags.push('Online');
             if (row.inPerson) tags.push('In person');
             const noteHtml = row.note ? `<div style="margin-top:6px; font-size:13px; color:var(--muted);">${escapeHtml(row.note)}</div>` : '';
-            const tagsHtml = tags.length ? `<div style="margin-top:6px; display:flex; flex-wrap:wrap; gap:6px;">${tags.map((tag) => `<span style="display:inline-flex; align-items:center; padding:3px 8px; border-radius:999px; border:1px solid var(--border); font-size:12px; font-weight:700; color:var(--text); background:var(--surface);">${escapeHtml(tag)}</span>`).join('')}</div>` : '';
+            const tagsHtml = tags.length ? `<div style="margin-top:6px; display:flex; flex-wrap:wrap; gap:6px;">${tags.map((tag) => `<span style="display:inline-flex; align-items:center; padding:3px 8px; border-radius:999px; border:1px solid var(--border); font-size:12px; font-weight:700; color:var(--text); background:${theme.surface};">${escapeHtml(tag)}</span>`).join('')}</div>` : '';
             return `
               <div style="padding:12px 0; border-top:${index === 0 ? 'none' : '1px solid var(--border)'};">
                 <div style="display:flex; justify-content:space-between; gap:12px; align-items:baseline;">
@@ -838,7 +827,6 @@
         </header>
         ${heroHtml}
         ${quickHtml}
-        ${imageHtml}
         ${helpHtml}
         ${servicesHtml}
         ${hoursHtml}
@@ -849,6 +837,24 @@
         ${closingHtml}
       </div>`;
   };
+
+  const resolveThemeVars = (html, theme) => html
+    .replace(/var\(--page-bg\)/g, theme.pageBg)
+    .replace(/var\(--surface\)/g, theme.surface)
+    .replace(/var\(--surface-alt\)/g, theme.surfaceAlt)
+    .replace(/var\(--text\)/g, theme.text)
+    .replace(/var\(--muted\)/g, theme.muted)
+    .replace(/var\(--border\)/g, theme.border)
+    .replace(/var\(--accent\)/g, theme.accent)
+    .replace(/var\(--accent-2\)/g, theme.accent2)
+    .replace(/var\(--hero-start\)/g, theme.heroStart)
+    .replace(/var\(--hero-mid\)/g, theme.heroMid)
+    .replace(/var\(--hero-end\)/g, theme.heroEnd)
+    .replace(/var\(--hero-text\)/g, theme.heroText)
+    .replace(/var\(--soft1\)/g, theme.surfaceAlt)
+    .replace(/var\(--soft2\)/g, theme.surface)
+    .replace(/var\(--soft3\)/g, theme.surfaceAlt)
+    .replace(/var\(--soft4\)/g, theme.surface);
 
   const buildStandaloneHtml = () => {
     const theme = currentTheme();
@@ -873,8 +879,8 @@ ${buildFragment()}
   };
 
   const renderPreview = () => {
-    outputEl.value = buildFragment();
-    previewEl.srcdoc = buildStandaloneHtml();
+    outputEl.value = resolveThemeVars(buildFragment(), currentTheme());
+    previewEl.srcdoc = resolveThemeVars(buildStandaloneHtml(), currentTheme());
     saveState();
   };
 
@@ -943,6 +949,7 @@ ${buildFragment()}
     const imageMatch = name.match(/^images\[(\d+)\]\.(src|alt|caption)$/);
     if (imageMatch) {
       const index = Number(imageMatch[1]);
+      if (!state.images[index]) state.images[index] = { src: '', alt: '', caption: '' };
       state.images[index][imageMatch[2]] = value;
       return;
     }
