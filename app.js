@@ -1,5 +1,5 @@
 (() => {
-  const STORAGE_KEY = 'embedded-tutor-canvas-generator:v4';
+  const STORAGE_KEY = 'embedded-tutor-canvas-generator:v6';
   const outputEl = document.querySelector('[data-output]');
   const previewEl = document.querySelector('[data-preview]');
   const editorEl = document.querySelector('#editor');
@@ -35,24 +35,22 @@
 
   const sectionDefs = [
     { key: 'hero', label: 'Header / intro', note: 'Title, intro, first impression' },
-    { key: 'contact', label: 'Contact methods', note: 'Which methods appear' },
-    { key: 'quickAccess', label: 'Quick access', note: 'Zoom, Canvas, location' },
+    { key: 'contact', label: 'Contact methods', note: 'Email, Discord, Canvas, plus custom methods' },
+    { key: 'quickAccess', label: 'Quick access', note: 'Zoom, location, Canvas' },
     { key: 'images', label: 'Images', note: 'Portraits and gallery' },
     { key: 'help', label: 'How I can help', note: 'Bullets and course note' },
     { key: 'services', label: 'Services / resources', note: 'Tutorial Center cards' },
-    { key: 'hours', label: 'Tutorial Center hours', note: 'Center schedule table' },
-    { key: 'personalHours', label: 'Personal hours', note: 'Your embedded schedule' },
+    { key: 'hours', label: 'Hours', note: 'One section with per-row online / in-person toggles' },
+    { key: 'hobby', label: 'Hobby section', note: 'Optional personal interests' },
+    { key: 'custom', label: 'Custom section', note: 'One extra freeform block' },
     { key: 'pet', label: 'Pet / mascot', note: 'Optional personality block' },
     { key: 'closingNote', label: 'Closing note', note: 'Final line at the bottom' },
   ];
 
-  const contactMethodDefs = [
-    { key: 'email', label: 'Email', icon: '✉️', href: 'mailto:', placeholder: 'rav1@my.scccd.edu' },
-    { key: 'discord', label: 'Discord', icon: '💬', href: null, placeholder: 'vossrobert in your class Discord server' },
-    { key: 'canvas', label: 'Canvas', icon: '🧭', href: null, placeholder: 'Message me through Canvas Messages' },
-    { key: 'slack', label: 'Slack', icon: '#', href: null, placeholder: 'optional Slack handle or channel' },
-    { key: 'telegram', label: 'Telegram', icon: '✈️', href: 'https://t.me/', placeholder: '@wheelchairboy7246' },
-    { key: 'sms', label: 'SMS', icon: '📱', href: 'sms:', placeholder: 'optional number' },
+  const defaultContactMethods = [
+    { key: 'email', label: 'Email', badge: 'EM', hrefPrefix: 'mailto:' },
+    { key: 'discord', label: 'Discord', badge: 'DC', hrefPrefix: null },
+    { key: 'canvas', label: 'Canvas', badge: 'CV', hrefPrefix: null },
   ];
 
   const defaultState = () => ({
@@ -78,7 +76,8 @@
       help: true,
       services: true,
       hours: true,
-      personalHours: true,
+      hobby: false,
+      custom: false,
       pet: false,
       closingNote: true,
     },
@@ -95,10 +94,10 @@
       email: { enabled: true, value: 'rav1@my.scccd.edu' },
       discord: { enabled: true, value: 'vossrobert in your class Discord server' },
       canvas: { enabled: true, value: 'Message me through Canvas Messages' },
-      slack: { enabled: false, value: '' },
-      telegram: { enabled: false, value: '@wheelchairboy7246' },
-      sms: { enabled: false, value: '' },
     },
+    customContactMethods: [
+      { enabled: false, label: 'Slack', badge: 'SL', value: '', link: '' },
+    ],
     zoomUrl: 'https://cccconfer.zoom.us/j/5593255248',
     zoomId: '559 325 5248',
     inPersonLocation: 'AC1-137, next to the computer lab',
@@ -123,37 +122,23 @@
     ],
     resourcesNote: 'Whiteboard tables are one of the best tools here. They make it easier to work through problems without feeling locked into the first thing you write.',
     resourcesTip: 'Services and hours can change, so confirm details on the Tutorial Center Canvas.',
-    centerHours: [
-      {
-        section: 'In Person (AC1-137)',
-        rows: [
-          { day: 'Monday', detail: '9:00am – 6:00pm' },
-          { day: 'Tuesday', detail: '9:00am – 9:00pm' },
-          { day: 'Wednesday', detail: '9:00am – 9:00pm' },
-          { day: 'Thursday', detail: '9:00am – 9:00pm' },
-          { day: 'Friday', detail: '9:00am – 5:00pm' },
-        ],
-      },
-      {
-        section: 'Online',
-        rows: [
-          { day: 'Monday', detail: '10:00am – 6:00pm' },
-          { day: 'Tuesday', detail: '10:00am – 9:00pm' },
-          { day: 'Wednesday', detail: '10:00am – 9:00pm' },
-          { day: 'Thursday', detail: '10:00am – 9:00pm' },
-          { day: 'Friday', detail: '10:00am – 5:00pm' },
-          { day: 'Sunday', detail: '2:00pm – 8:00pm' },
-        ],
-      },
+    hoursTitle: 'Hours',
+    hoursNote: 'Weekdays can share the same hours across online and in person. Sunday can stay online only.',
+    hoursRows: [
+      { day: 'Monday', time: '9:00am – 6:00pm', online: true, inPerson: true, note: '' },
+      { day: 'Tuesday', time: '9:00am – 9:00pm', online: true, inPerson: true, note: '' },
+      { day: 'Wednesday', time: '9:00am – 9:00pm', online: true, inPerson: true, note: '' },
+      { day: 'Thursday', time: '9:00am – 9:00pm', online: true, inPerson: true, note: '' },
+      { day: 'Friday', time: '9:00am – 5:00pm', online: true, inPerson: true, note: '' },
+      { day: 'Sunday', time: '2:00pm – 8:00pm', online: true, inPerson: false, note: 'Online only' },
     ],
-    personalHours: [
-      { day: 'Monday', detail: 'Off' },
-      { day: 'Tuesday', detail: 'Embedded (CSCI 45)' },
-      { day: 'Wednesday', detail: '6:00pm – 8:30pm' },
-      { day: 'Thursday', detail: 'Embedded (CSCI 45)' },
-      { day: 'Friday', detail: 'Embedded (ENGR 6)' },
-      { day: 'Sunday', detail: 'Online Only · 2:00pm – 5:00pm' },
-    ],
+    hobbyTitle: 'A little about me',
+    hobbyBlurb: 'Optional. Keep it human, not performative.',
+    hobbyItems: ['Underwater robotics', 'Photography', 'Programming side projects'],
+    customTitle: 'Custom section',
+    customBody: 'Use this for one extra block that does not fit anywhere else.',
+    customItems: ['Optional bullet one', 'Optional bullet two'],
+    petTitle: 'Optional mascot corner',
     petName: 'Neptune',
     petDescription: 'A tiny morale-boosting section for an animal, mascot, or lab gremlin.',
     petImage: '',
@@ -162,74 +147,8 @@
     closingNote: 'Please feel free to come in, even if it’s a simple question.',
   });
 
-  const clone = (obj) => JSON.parse(JSON.stringify(obj));
+  const clone = (value) => JSON.parse(JSON.stringify(value));
 
-  const normalizeState = (raw) => {
-    const defaults = defaultState();
-    const parsed = raw && typeof raw === 'object' ? raw : {};
-    const presetName = ['spring', 'summer', 'fall', 'custom'].includes(parsed.palettePreset) ? parsed.palettePreset : defaults.palettePreset;
-    const preset = presetName === 'custom' ? {} : presets[presetName];
-    const sections = { ...defaults.sections, ...(parsed.sections || {}) };
-    const methods = {};
-    for (const def of contactMethodDefs) {
-      const src = parsed.contactMethods?.[def.key] || defaults.contactMethods[def.key];
-      methods[def.key] = { enabled: Boolean(src?.enabled), value: String(src?.value ?? '') };
-    }
-    return {
-      ...defaults,
-      ...parsed,
-      term: ['fall', 'spring', 'summer'].includes(parsed.term) ? parsed.term : defaults.term,
-      palettePreset: presetName,
-      sections,
-      pageBg: String(parsed.pageBg ?? preset.pageBg ?? defaults.pageBg),
-      surface: String(parsed.surface ?? preset.surface ?? defaults.surface),
-      surfaceAlt: String(parsed.surfaceAlt ?? preset.surfaceAlt ?? defaults.surfaceAlt),
-      text: String(parsed.text ?? preset.text ?? defaults.text),
-      muted: String(parsed.muted ?? preset.muted ?? defaults.muted),
-      border: String(parsed.border ?? preset.border ?? defaults.border),
-      accent: String(parsed.accent ?? preset.accent ?? defaults.accent),
-      accent2: String(parsed.accent2 ?? preset.accent2 ?? defaults.accent2),
-      heroStart: String(parsed.heroStart ?? preset.heroStart ?? defaults.heroStart),
-      heroMid: String(parsed.heroMid ?? preset.heroMid ?? defaults.heroMid),
-      heroEnd: String(parsed.heroEnd ?? preset.heroEnd ?? defaults.heroEnd),
-      heroText: String(parsed.heroText ?? preset.heroText ?? defaults.heroText),
-      images: Array.isArray(parsed.images) ? parsed.images.slice(0, 4).map((img) => ({
-        src: String(img?.src ?? ''),
-        alt: String(img?.alt ?? ''),
-        caption: String(img?.caption ?? ''),
-      })) : clone(defaults.images),
-      helpItems: Array.isArray(parsed.helpItems) ? parsed.helpItems.slice(0, 8).map((item) => String(item ?? '')) : clone(defaults.helpItems),
-      visitCards: Array.isArray(parsed.visitCards) ? parsed.visitCards.slice(0, 4).map((item, idx) => ({
-        title: String(item?.title ?? defaults.visitCards[idx].title),
-        body: String(item?.body ?? defaults.visitCards[idx].body),
-      })) : clone(defaults.visitCards),
-      centerHours: Array.isArray(parsed.centerHours) ? parsed.centerHours.slice(0, 2).map((section, idx) => ({
-        section: String(section?.section ?? defaults.centerHours[idx].section),
-        rows: Array.isArray(section?.rows) ? section.rows.slice(0, 8).map((row) => ({ day: String(row?.day ?? ''), detail: String(row?.detail ?? '') })) : clone(defaults.centerHours[idx].rows),
-      })) : clone(defaults.centerHours),
-      personalHours: Array.isArray(parsed.personalHours) ? parsed.personalHours.slice(0, 8).map((row) => ({ day: String(row?.day ?? ''), detail: String(row?.detail ?? '') })) : clone(defaults.personalHours),
-      contactMethods: methods,
-      petName: String(parsed.petName ?? defaults.petName),
-      petDescription: String(parsed.petDescription ?? defaults.petDescription),
-      petImage: String(parsed.petImage ?? defaults.petImage),
-      petAlt: String(parsed.petAlt ?? defaults.petAlt),
-      petNote: String(parsed.petNote ?? defaults.petNote),
-    };
-  };
-
-  const loadState = () => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? normalizeState(JSON.parse(raw)) : defaultState();
-    } catch {
-      return defaultState();
-    }
-  };
-
-  let state = loadState();
-
-  const saveState = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  const setStatus = (message) => { statusEl.textContent = message; };
   const escapeHtml = (value) => String(value ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -237,14 +156,100 @@
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 
-  const termLabel = () => termLabels[state.term] || 'Spring';
-  const activeTheme = () => {
-    const base = state.palettePreset === 'custom' ? presets.spring : presets[state.palettePreset] || presets.spring;
+  const currentTermLabel = () => termLabels[state.term] || 'Spring';
+
+  const currentTheme = () => {
+    const preset = state.palettePreset === 'custom' ? presets.spring : (presets[state.palettePreset] || presets.spring);
     return {
-      pageBg: state.pageBg, surface: state.surface, surfaceAlt: state.surfaceAlt, text: state.text, muted: state.muted, border: state.border,
-      accent: state.accent, accent2: state.accent2, heroStart: state.heroStart, heroMid: state.heroMid, heroEnd: state.heroEnd, heroText: state.heroText,
-      soft1: base.soft1, soft2: base.soft2, soft3: base.soft3, soft4: base.soft4,
+      pageBg: state.pageBg,
+      surface: state.surface,
+      surfaceAlt: state.surfaceAlt,
+      text: state.text,
+      muted: state.muted,
+      border: state.border,
+      accent: state.accent,
+      accent2: state.accent2,
+      heroStart: state.heroStart,
+      heroMid: state.heroMid,
+      heroEnd: state.heroEnd,
+      heroText: state.heroText,
+      soft1: preset.soft1,
+      soft2: preset.soft2,
+      soft3: preset.soft3,
+      soft4: preset.soft4,
     };
+  };
+
+  const saveState = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+
+  const loadState = () => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return defaultState();
+      const parsed = JSON.parse(raw);
+      const defaults = defaultState();
+      const presetName = ['spring', 'summer', 'fall', 'custom'].includes(parsed.palettePreset) ? parsed.palettePreset : defaults.palettePreset;
+      const preset = presetName === 'custom' ? {} : presets[presetName];
+      return {
+        ...defaults,
+        ...parsed,
+        term: ['fall', 'spring', 'summer'].includes(parsed.term) ? parsed.term : defaults.term,
+        palettePreset: presetName,
+        pageBg: String(parsed.pageBg ?? preset.pageBg ?? defaults.pageBg),
+        surface: String(parsed.surface ?? preset.surface ?? defaults.surface),
+        surfaceAlt: String(parsed.surfaceAlt ?? preset.surfaceAlt ?? defaults.surfaceAlt),
+        text: String(parsed.text ?? preset.text ?? defaults.text),
+        muted: String(parsed.muted ?? preset.muted ?? defaults.muted),
+        border: String(parsed.border ?? preset.border ?? defaults.border),
+        accent: String(parsed.accent ?? preset.accent ?? defaults.accent),
+        accent2: String(parsed.accent2 ?? preset.accent2 ?? defaults.accent2),
+        heroStart: String(parsed.heroStart ?? preset.heroStart ?? defaults.heroStart),
+        heroMid: String(parsed.heroMid ?? preset.heroMid ?? defaults.heroMid),
+        heroEnd: String(parsed.heroEnd ?? preset.heroEnd ?? defaults.heroEnd),
+        heroText: String(parsed.heroText ?? preset.heroText ?? defaults.heroText),
+        sections: { ...defaults.sections, ...(parsed.sections || {}) },
+        contactMethods: {
+          email: { enabled: Boolean(parsed.contactMethods?.email?.enabled ?? defaults.contactMethods.email.enabled), value: String(parsed.contactMethods?.email?.value ?? defaults.contactMethods.email.value) },
+          discord: { enabled: Boolean(parsed.contactMethods?.discord?.enabled ?? defaults.contactMethods.discord.enabled), value: String(parsed.contactMethods?.discord?.value ?? defaults.contactMethods.discord.value) },
+          canvas: { enabled: Boolean(parsed.contactMethods?.canvas?.enabled ?? defaults.contactMethods.canvas.enabled), value: String(parsed.contactMethods?.canvas?.value ?? defaults.contactMethods.canvas.value) },
+        },
+        customContactMethods: Array.isArray(parsed.customContactMethods)
+          ? parsed.customContactMethods.slice(0, 8).map((item) => ({
+              enabled: Boolean(item?.enabled),
+              label: String(item?.label ?? ''),
+              badge: String(item?.badge ?? ''),
+              value: String(item?.value ?? ''),
+              link: String(item?.link ?? ''),
+            }))
+          : clone(defaults.customContactMethods),
+        images: Array.isArray(parsed.images)
+          ? parsed.images.slice(0, 4).map((img) => ({ src: String(img?.src ?? ''), alt: String(img?.alt ?? ''), caption: String(img?.caption ?? '') }))
+          : clone(defaults.images),
+        helpItems: Array.isArray(parsed.helpItems) ? parsed.helpItems.slice(0, 8).map((item) => String(item ?? '')) : clone(defaults.helpItems),
+        visitCards: Array.isArray(parsed.visitCards)
+          ? parsed.visitCards.slice(0, 4).map((item, idx) => ({ title: String(item?.title ?? defaults.visitCards[idx].title), body: String(item?.body ?? defaults.visitCards[idx].body) }))
+          : clone(defaults.visitCards),
+        hoursRows: Array.isArray(parsed.hoursRows)
+          ? parsed.hoursRows.slice(0, 8).map((row) => ({
+              day: String(row?.day ?? ''),
+              time: String(row?.time ?? ''),
+              online: Boolean(row?.online),
+              inPerson: Boolean(row?.inPerson),
+              note: String(row?.note ?? ''),
+            }))
+          : clone(defaults.hoursRows),
+        hobbyItems: Array.isArray(parsed.hobbyItems) ? parsed.hobbyItems.slice(0, 8).map((item) => String(item ?? '')) : clone(defaults.hobbyItems),
+        customItems: Array.isArray(parsed.customItems) ? parsed.customItems.slice(0, 8).map((item) => String(item ?? '')) : clone(defaults.customItems),
+      };
+    } catch {
+      return defaultState();
+    }
+  };
+
+  let state = loadState();
+
+  const setStatus = (message) => {
+    statusEl.textContent = message;
   };
 
   const textField = (label, name, value, type = 'text', full = false) => `
@@ -264,7 +269,7 @@
       </span>
     </label>`;
 
-  const switchField = (label, name, checked, note = '') => `
+  const checkboxField = (label, name, checked, note = '') => `
     <label class="switchItem">
       <span class="switchLabel">
         <input type="checkbox" name="${escapeHtml(name)}" ${checked ? 'checked' : ''} />
@@ -273,204 +278,170 @@
       ${note ? `<small>${escapeHtml(note)}</small>` : ''}
     </label>`;
 
-  const contactBadge = (def, item) => {
-    const value = String(item?.value ?? '');
-    const icon = `<span class="iconBadge" aria-hidden="true">${escapeHtml(def.icon)}</span>`;
-    const label = `<span class="contactLabel"><strong>${escapeHtml(def.label)}</strong><span>${escapeHtml(value)}</span></span>`;
-    if (!item?.enabled || !value) return `<div class="contactBadge">${icon}${label}</div>`;
-    const href = def.key === 'email' ? `mailto:${value}`
-      : def.key === 'telegram' ? `https://t.me/${value.replace(/^@/, '')}`
-      : def.key === 'sms' ? `sms:${value}`
-      : def.href ? `${def.href}${value}`
-      : null;
-    return href
-      ? `<a class="contactBadge" href="${escapeHtml(href)}">${icon}${label}</a>`
-      : `<div class="contactBadge">${icon}${label}</div>`;
-  };
-
-  const sectionCard = (key, title, note, contentHtml) => `
+  const sectionShell = (key, title, note, contentHtml) => `
     <section class="fieldGroup card ${state.sections[key] ? '' : 'disabled'}">
       <div class="sectionHead sectionLocalHead">
         <div>
           <h3>${escapeHtml(title)}</h3>
           <p class="groupNote">${escapeHtml(note)}</p>
         </div>
-        ${switchField('Show section', `sections.${key}`, Boolean(state.sections[key]))}
+        ${checkboxField('Show section', `sections.${key}`, Boolean(state.sections[key]))}
       </div>
       ${state.sections[key] ? contentHtml : '<div class="sectionOffNote">Turn this section on to edit it.</div>'}
     </section>`;
 
-  const buildEditor = () => {
-    const setup = `
-      <section class="fieldGroup card">
-        <div class="sectionHead sectionLocalHead">
-          <div>
-            <h3>Site setup</h3>
-            <p class="groupNote">Term, colors, and the section map.</p>
-          </div>
-        </div>
-        <div class="fieldGrid topGrid">
-          <label class="field">
-            <span class="labelText">Term</span>
-            <select name="term">
-              <option value="fall" ${state.term === 'fall' ? 'selected' : ''}>Fall</option>
-              <option value="spring" ${state.term === 'spring' ? 'selected' : ''}>Spring</option>
-              <option value="summer" ${state.term === 'summer' ? 'selected' : ''}>Summer</option>
-            </select>
-          </label>
-          <label class="field">
-            <span class="labelText">Color preset</span>
-            <select name="palettePreset">
-              <option value="spring" ${state.palettePreset === 'spring' ? 'selected' : ''}>Spring</option>
-              <option value="summer" ${state.palettePreset === 'summer' ? 'selected' : ''}>Summer</option>
-              <option value="fall" ${state.palettePreset === 'fall' ? 'selected' : ''}>Fall</option>
-              <option value="custom" ${state.palettePreset === 'custom' ? 'selected' : ''}>Custom</option>
-            </select>
-          </label>
-          <div class="setupNote">Everything below can be hidden locally, section by section.</div>
-        </div>
-        <div class="sectionToggleGrid">
-          ${sectionDefs.map((s) => switchField(s.label, `sections.${s.key}`, Boolean(state.sections[s.key]), s.note)).join('')}
-        </div>
-        <div class="fieldGrid swatchGrid" style="margin-top: 12px;">
-          ${colorField('Hero start', 'heroStart', state.heroStart)}
-          ${colorField('Hero middle', 'heroMid', state.heroMid)}
-          ${colorField('Hero end', 'heroEnd', state.heroEnd)}
-          ${colorField('Hero text', 'heroText', state.heroText)}
-          ${colorField('Accent', 'accent', state.accent)}
-          ${colorField('Accent 2', 'accent2', state.accent2)}
-          ${colorField('Page background', 'pageBg', state.pageBg)}
-          ${colorField('Surface', 'surface', state.surface)}
-          ${colorField('Surface alt', 'surfaceAlt', state.surfaceAlt)}
-          ${colorField('Text', 'text', state.text)}
-          ${colorField('Muted text', 'muted', state.muted)}
-          ${colorField('Border', 'border', state.border)}
-        </div>
-      </section>`;
-
-    const contactMethodsHtml = contactMethodDefs.map((def) => {
-      const item = state.contactMethods[def.key] || { enabled: false, value: '' };
+  const renderEditor = () => {
+    const defaultContactCards = defaultContactMethods.map((def) => {
+      const item = state.contactMethods[def.key];
       return `
         <div class="rowCard contactMethodCard">
           <div class="sectionHead methodHead">
             <div class="methodTitle">
-              <span class="iconBadge" aria-hidden="true">${escapeHtml(def.icon)}</span>
+              <span class="iconBadge" aria-hidden="true">${escapeHtml(def.badge)}</span>
               <div>
                 <strong>${escapeHtml(def.label)}</strong>
-                <div class="muted small">${escapeHtml(def.placeholder)}</div>
+                <div class="muted small">Default method</div>
               </div>
             </div>
-            ${switchField('Include', `contactMethods.${def.key}.enabled`, Boolean(item.enabled))}
+            ${checkboxField('Include', `contactMethods.${def.key}.enabled`, Boolean(item.enabled))}
           </div>
           <label class="field full">
             <span class="labelText">${escapeHtml(def.label)} value</span>
-            <input type="text" name="contactMethods.${def.key}.value" value="${escapeHtml(item.value)}" placeholder="${escapeHtml(def.placeholder)}" />
+            <input type="text" name="contactMethods.${def.key}.value" value="${escapeHtml(item.value)}" />
           </label>
         </div>`;
     }).join('');
 
-    const imageHtml = state.images.map((img, idx) => `
+    const customContactCards = state.customContactMethods.map((item, index) => `
+      <div class="rowCard contactMethodCard">
+        <div class="sectionHead methodHead">
+          <div class="methodTitle">
+            <span class="iconBadge" aria-hidden="true">${escapeHtml(item.badge || 'CU')}</span>
+            <div>
+              <strong>${escapeHtml(item.label || 'Custom method')}</strong>
+              <div class="muted small">Additional contact method</div>
+            </div>
+          </div>
+          ${checkboxField('Include', `customContactMethods[${index}].enabled`, Boolean(item.enabled))}
+        </div>
+        <div class="fieldGrid contactCustomGrid">
+          ${textField('Label', `customContactMethods[${index}].label`, item.label)}
+          ${textField('Badge', `customContactMethods[${index}].badge`, item.badge)}
+          ${textField('Value', `customContactMethods[${index}].value`, item.value, 'text', true)}
+          ${textField('Link (optional)', `customContactMethods[${index}].link`, item.link, 'url', true)}
+        </div>
+        <div class="helperStrip"><button class="ghostBtn" type="button" data-remove-custom-contact="${index}">Remove method</button></div>
+      </div>`).join('');
+
+    const imageCards = state.images.map((img, index) => `
       <div class="rowCard imageRow">
         <div class="rowGrid imageGrid">
           <label class="field">
             <span class="miniLabel">Image URL or data</span>
-            <input name="images[${idx}].src" value="${escapeHtml(img.src)}" placeholder="https://..." />
+            <input name="images[${index}].src" value="${escapeHtml(img.src)}" placeholder="https://..." />
           </label>
           <label class="field">
             <span class="miniLabel">Alt text</span>
-            <input name="images[${idx}].alt" value="${escapeHtml(img.alt)}" placeholder="Describe the image" />
+            <input name="images[${index}].alt" value="${escapeHtml(img.alt)}" placeholder="Describe the image" />
           </label>
           <label class="field fullField">
             <span class="miniLabel">Caption</span>
-            <input name="images[${idx}].caption" value="${escapeHtml(img.caption)}" placeholder="Optional caption" />
+            <input name="images[${index}].caption" value="${escapeHtml(img.caption)}" placeholder="Optional caption" />
           </label>
           <label class="field fullField filePicker">
             <span class="miniLabel">Upload image</span>
-            <input type="file" accept="image/*" data-image-file="${idx}" />
+            <input type="file" accept="image/*" data-image-file="${index}" />
           </label>
-          <div class="helperStrip"><button class="ghostBtn" type="button" data-remove-image="${idx}">Remove</button></div>
+          <div class="helperStrip"><button class="ghostBtn" type="button" data-remove-image="${index}">Remove</button></div>
         </div>
       </div>`).join('');
 
-    const helpHtml = state.helpItems.map((item, idx) => `
+    const helpItems = state.helpItems.map((item, index) => `
       <label class="field full">
-        <span class="labelText">Help item ${idx + 1}</span>
-        <textarea name="helpItems[${idx}]">${escapeHtml(item)}</textarea>
+        <span class="labelText">Help item ${index + 1}</span>
+        <textarea name="helpItems[${index}]">${escapeHtml(item)}</textarea>
       </label>`).join('');
 
-    const servicesHtml = state.visitCards.map((card, idx) => `
+    const serviceCards = state.visitCards.map((card, index) => `
       <div class="rowCard">
         <div class="rowGrid serviceGrid">
           <label class="field">
             <span class="miniLabel">Card title</span>
-            <input name="visitCards[${idx}].title" value="${escapeHtml(card.title)}" />
+            <input name="visitCards[${index}].title" value="${escapeHtml(card.title)}" />
           </label>
           <label class="field fullField">
             <span class="miniLabel">Card text</span>
-            <input name="visitCards[${idx}].body" value="${escapeHtml(card.body)}" />
+            <input name="visitCards[${index}].body" value="${escapeHtml(card.body)}" />
           </label>
-          <div class="helperStrip"><button class="ghostBtn" type="button" data-remove-visit-card="${idx}">Remove</button></div>
+          <div class="helperStrip"><button class="ghostBtn" type="button" data-remove-visit-card="${index}">Remove</button></div>
         </div>
       </div>`).join('');
 
-    const centerHoursHtml = state.centerHours.map((section, sectionIndex) => `
+    const hoursCards = state.hoursRows.map((row, index) => `
       <div class="rowCard">
-        <div class="rowGrid sectionHeaderGrid">
-          <label class="field fullField">
-            <span class="miniLabel">Section label</span>
-            <input name="centerHours[${sectionIndex}].section" value="${escapeHtml(section.section)}" />
+        <div class="rowGrid hoursGrid">
+          <label class="field">
+            <span class="miniLabel">Day</span>
+            <input name="hoursRows[${index}].day" value="${escapeHtml(row.day)}" />
           </label>
-          <div class="helperStrip"><button class="ghostBtn" type="button" data-add-center-row="${sectionIndex}">Add row</button></div>
-        </div>
-        <div class="hoursRows">
-          ${section.rows.map((row, rowIndex) => `
-            <div class="rowGrid hourRow">
-              <label class="field">
-                <span class="miniLabel">Day</span>
-                <input name="centerHours[${sectionIndex}].rows[${rowIndex}].day" value="${escapeHtml(row.day)}" />
-              </label>
-              <label class="field">
-                <span class="miniLabel">Detail</span>
-                <input name="centerHours[${sectionIndex}].rows[${rowIndex}].detail" value="${escapeHtml(row.detail)}" />
-              </label>
-              <div class="helperStrip">
-                <button class="ghostBtn" type="button" data-add-center-below="${sectionIndex}" data-index="${rowIndex}">Add below</button>
-                <button class="ghostBtn" type="button" data-remove-center-row="${sectionIndex}" data-index="${rowIndex}">Remove</button>
-              </div>
-            </div>`).join('')}
+          <label class="field">
+            <span class="miniLabel">Time</span>
+            <input name="hoursRows[${index}].time" value="${escapeHtml(row.time)}" />
+          </label>
+          <label class="switchItem inlineSwitch">
+            <span class="switchLabel"><input type="checkbox" name="hoursRows[${index}].online" ${row.online ? 'checked' : ''} /> <span>Online</span></span>
+          </label>
+          <label class="switchItem inlineSwitch">
+            <span class="switchLabel"><input type="checkbox" name="hoursRows[${index}].inPerson" ${row.inPerson ? 'checked' : ''} /> <span>In person</span></span>
+          </label>
+          <label class="field fullField">
+            <span class="miniLabel">Note</span>
+            <input name="hoursRows[${index}].note" value="${escapeHtml(row.note)}" placeholder="Optional note" />
+          </label>
+          <div class="helperStrip">
+            <button class="ghostBtn" type="button" data-add-hour-below="${index}">Add below</button>
+            <button class="ghostBtn" type="button" data-remove-hour-row="${index}">Remove</button>
+          </div>
         </div>
       </div>`).join('');
 
-    const personalHoursHtml = `
-      <div class="rowCard">
-        <div class="rowGrid sectionHeaderGrid">
-          <label class="field fullField">
-            <span class="miniLabel">Section label</span>
-            <input value="My ${escapeHtml(termLabel())} Hours" disabled />
-          </label>
-          <div class="helperStrip"><span class="notice">Editable rows below</span></div>
-        </div>
-        <div class="hoursRows">
-          ${state.personalHours.map((row, rowIndex) => `
-            <div class="rowGrid hourRow">
-              <label class="field">
-                <span class="miniLabel">Day</span>
-                <input name="personalHours[${rowIndex}].day" value="${escapeHtml(row.day)}" />
-              </label>
-              <label class="field">
-                <span class="miniLabel">Detail</span>
-                <input name="personalHours[${rowIndex}].detail" value="${escapeHtml(row.detail)}" />
-              </label>
-              <div class="helperStrip">
-                <button class="ghostBtn" type="button" data-add-personal-below="${rowIndex}">Add below</button>
-                <button class="ghostBtn" type="button" data-remove-personal-row="${rowIndex}">Remove</button>
-              </div>
-            </div>`).join('')}
-        </div>
+    const hobbyItems = state.hobbyItems.map((item, index) => `
+      <label class="field full">
+        <span class="labelText">Hobby item ${index + 1}</span>
+        <input name="hobbyItems[${index}]" value="${escapeHtml(item)}" />
+      </label>`).join('');
+
+    const customItems = state.customItems.map((item, index) => `
+      <label class="field full">
+        <span class="labelText">Custom bullet ${index + 1}</span>
+        <input name="customItems[${index}]" value="${escapeHtml(item)}" />
+      </label>`).join('');
+
+    const hobbySection = `
+      <div class="fieldGrid">
+        ${textField('Section title', 'hobbyTitle', state.hobbyTitle)}
+        ${textField('Blurb', 'hobbyBlurb', state.hobbyBlurb, 'text', true)}
+        ${hobbyItems}
+      </div>
+      <div class="helperStrip">
+        <button class="ghostBtn" type="button" data-add-hobby-item>Add hobby item</button>
+        <button class="ghostBtn" type="button" data-remove-hobby-item>Remove last</button>
       </div>`;
 
-    const petHtml = `
+    const customSection = `
       <div class="fieldGrid">
+        ${textField('Section title', 'customTitle', state.customTitle)}
+        ${textField('Body', 'customBody', state.customBody, 'textarea', true)}
+        ${customItems}
+      </div>
+      <div class="helperStrip">
+        <button class="ghostBtn" type="button" data-add-custom-item>Add custom bullet</button>
+        <button class="ghostBtn" type="button" data-remove-custom-item>Remove last</button>
+      </div>`;
+
+    const petSection = `
+      <div class="fieldGrid">
+        ${textField('Pet title', 'petTitle', state.petTitle)}
         ${textField('Pet name', 'petName', state.petName)}
         ${textField('Pet image URL or data', 'petImage', state.petImage, 'text', true)}
         ${textField('Pet alt text', 'petAlt', state.petAlt)}
@@ -478,24 +449,52 @@
         ${textField('Pet note', 'petNote', state.petNote, 'text', true)}
       </div>`;
 
-    const contactSection = sectionCard('contact', 'Contact methods', 'Pick the methods students should actually see.', `
-      <div class="fieldGrid contactGrid">${contactMethodsHtml}</div>
-      <div class="fieldGrid" style="margin-top: 12px;">${textField('Contact tip', 'contactTip', state.contactTip, 'text', true)}</div>`);
-
-    const quickSection = sectionCard('quickAccess', 'Quick access', 'Zoom, location, and the main Canvas page.', `
-      <div class="fieldGrid">
-        ${textField('Zoom URL', 'zoomUrl', state.zoomUrl, 'url', true)}
-        ${textField('Zoom ID', 'zoomId', state.zoomId)}
-        ${textField('In-person location', 'inPersonLocation', state.inPersonLocation, 'text', true)}
-        ${textField('Canvas page URL', 'canvasUrl', state.canvasUrl, 'url', true)}
-        ${textField('Canvas link label', 'canvasLabel', state.canvasLabel)}
-      </div>`);
-
     editorEl.innerHTML = `
       <form id="generator-form" class="editorForm">
-        ${setup}
+        <section class="fieldGroup card">
+          <div class="sectionHead sectionLocalHead">
+            <div>
+              <h3>Site setup</h3>
+              <p class="groupNote">Choose the term and build the palette.</p>
+            </div>
+          </div>
+          <div class="fieldGrid topGrid">
+            <label class="field">
+              <span class="labelText">Term</span>
+              <select name="term">
+                <option value="fall" ${state.term === 'fall' ? 'selected' : ''}>Fall</option>
+                <option value="spring" ${state.term === 'spring' ? 'selected' : ''}>Spring</option>
+                <option value="summer" ${state.term === 'summer' ? 'selected' : ''}>Summer</option>
+              </select>
+            </label>
+            <label class="field">
+              <span class="labelText">Color preset</span>
+              <select name="palettePreset">
+                <option value="spring" ${state.palettePreset === 'spring' ? 'selected' : ''}>Spring</option>
+                <option value="summer" ${state.palettePreset === 'summer' ? 'selected' : ''}>Summer</option>
+                <option value="fall" ${state.palettePreset === 'fall' ? 'selected' : ''}>Fall</option>
+                <option value="custom" ${state.palettePreset === 'custom' ? 'selected' : ''}>Custom</option>
+              </select>
+            </label>
+            <div class="setupNote">Everything below is editable. Nothing here is sacred.</div>
+          </div>
+          <div class="fieldGrid swatchGrid" style="margin-top: 12px;">
+            ${colorField('Hero start', 'heroStart', state.heroStart)}
+            ${colorField('Hero middle', 'heroMid', state.heroMid)}
+            ${colorField('Hero end', 'heroEnd', state.heroEnd)}
+            ${colorField('Hero text', 'heroText', state.heroText)}
+            ${colorField('Accent', 'accent', state.accent)}
+            ${colorField('Accent 2', 'accent2', state.accent2)}
+            ${colorField('Page background', 'pageBg', state.pageBg)}
+            ${colorField('Surface', 'surface', state.surface)}
+            ${colorField('Surface alt', 'surfaceAlt', state.surfaceAlt)}
+            ${colorField('Text', 'text', state.text)}
+            ${colorField('Muted text', 'muted', state.muted)}
+            ${colorField('Border', 'border', state.border)}
+          </div>
+        </section>
 
-        ${sectionCard('hero', 'Header and intro', 'This is the top block students see first.', `
+        ${sectionShell('hero', 'Header and intro', 'This is the top block students see first.', `
           <div class="fieldGrid">
             ${textField('Page title', 'pageTitle', state.pageTitle)}
             ${textField('Eyebrow', 'eyebrow', state.eyebrow)}
@@ -507,102 +506,95 @@
             ${textField('Intro goal', 'introGoal', state.introGoal, 'text', true)}
           </div>`)}
 
-        ${contactSection}
-        ${quickSection}
+        ${sectionShell('contact', 'Contact methods', 'Default methods are email, Discord, and Canvas. Custom methods are optional.', `
+          <div class="fieldGrid contactGrid">${defaultContactCards}</div>
+          <div class="helperStrip" style="margin-top: 12px;">
+            <button class="ghostBtn" type="button" data-add-custom-contact>Add custom method</button>
+          </div>
+          <div class="fieldGrid" style="margin-top: 12px;">${customContactCards}</div>
+          <div class="fieldGrid" style="margin-top: 12px;">${textField('Contact tip', 'contactTip', state.contactTip, 'text', true)}</div>`)}
 
-        ${sectionCard('images', 'Images', 'Use one image or a small gallery. URLs or uploads both work.', `
-          <div class="fieldGrid">${imageHtml || '<p class="muted">No image slots yet.</p>'}</div>
+        ${sectionShell('quickAccess', 'Quick access', 'Zoom, location, and the main Canvas page.', `
+          <div class="fieldGrid">
+            ${textField('Zoom URL', 'zoomUrl', state.zoomUrl, 'url', true)}
+            ${textField('Zoom ID', 'zoomId', state.zoomId)}
+            ${textField('In-person location', 'inPersonLocation', state.inPersonLocation, 'text', true)}
+            ${textField('Canvas page URL', 'canvasUrl', state.canvasUrl, 'url', true)}
+            ${textField('Canvas link label', 'canvasLabel', state.canvasLabel)}
+          </div>`)}
+
+        ${sectionShell('images', 'Images', 'Use one image or a small gallery. URLs or uploads both work.', `
+          <div class="fieldGrid">${imageCards || '<p class="muted">No image slots yet.</p>'}</div>
           <div class="helperStrip" style="margin-top: 12px;"><button class="ghostBtn" type="button" data-add-image>Add image</button></div>`)}
 
-        ${sectionCard('help', 'How I can help', 'Short bullets read better than AI filler.', `
-          <div class="fieldGrid">${helpHtml}</div>
+        ${sectionShell('help', 'How I can help', 'Short bullets read better than AI filler.', `
+          <div class="fieldGrid">${helpItems}</div>
           <div class="helperStrip" style="margin-top: 12px;"><button class="ghostBtn" type="button" data-add-help-item>Add help item</button></div>
           <div class="fieldGrid" style="margin-top: 12px;">${textField('Course note', 'courseNote', state.courseNote, 'textarea', true)}</div>`)}
 
-        ${sectionCard('services', 'What to expect at the Tutorial Center', 'Small service cards that skim well.', `
-          <div class="fieldGrid">${servicesHtml}</div>
+        ${sectionShell('services', 'What to expect at the Tutorial Center', 'Small service cards that skim well.', `
+          <div class="fieldGrid">${serviceCards}</div>
           <div class="helperStrip" style="margin-top: 12px;"><button class="ghostBtn" type="button" data-add-visit-card>Add card</button></div>
           <div class="fieldGrid" style="margin-top: 12px;">
             ${textField('Resources note', 'resourcesNote', state.resourcesNote, 'textarea', true)}
             ${textField('Resources tip', 'resourcesTip', state.resourcesTip, 'text', true)}
           </div>`)}
 
-        ${sectionCard('hours', 'Tutorial Center hours', 'Prefilled, but easy to change later.', `<div class="fieldGrid">${centerHoursHtml}</div>`)}
+        ${sectionShell('hours', 'Hours', 'A single hours section with per-row online and in-person toggles.', `
+          <div class="fieldGrid">
+            ${textField('Section title', 'hoursTitle', state.hoursTitle)}
+            ${textField('Note', 'hoursNote', state.hoursNote, 'text', true)}
+          </div>
+          <div class="fieldGrid">${hoursCards}</div>
+          <div class="helperStrip" style="margin-top: 12px;"><button class="ghostBtn" type="button" data-add-hour-row>Add hour row</button></div>`)}
 
-        ${sectionCard('personalHours', `${escapeHtml(termLabel())} personal hours`, 'Use this for your embedded schedule.', `
-          <div class="fieldGrid">${personalHoursHtml}</div>
-          <div class="fieldGrid" style="margin-top: 12px;">${textField('Closing note', 'closingNote', state.closingNote, 'text', true)}</div>`)}
+        ${sectionShell('hobby', 'Hobby section', 'Optional. Keep it small and human.', hobbySection)}
 
-        ${sectionCard('pet', 'Pet / mascot', 'Optional personality block.', `<div class="fieldGrid">${petHtml}</div>`)}
+        ${sectionShell('custom', 'Custom section', 'One extra block for whatever does not fit elsewhere.', customSection)}
 
-        ${sectionCard('closingNote', 'Closing note', 'Keep the final line short.', `<div class="fieldGrid">${textField('Closing note', 'closingNote', state.closingNote, 'text', true)}</div>`)}
+        ${sectionShell('pet', 'Pet / mascot', 'Optional personality block.', petSection)}
+
+        ${sectionShell('closingNote', 'Closing note', 'Keep the final line short.', `<div class="fieldGrid">${textField('Closing note', 'closingNote', state.closingNote, 'text', true)}</div>`)}
       </form>`;
   };
 
-  const buildImageFigure = (img, idx) => {
-    if (!img.src.trim()) return '';
-    const alt = escapeHtml(img.alt || img.caption || `Image ${idx + 1}`);
-    return `
-      <figure style="margin:0; flex:1 1 280px; min-width:240px; padding:14px; border-radius:12px; background:var(--surface-alt); border:1px solid var(--border); color:var(--text);">
-        <img src="${escapeHtml(img.src)}" alt="${alt}" style="width:100%; height:auto; display:block; border-radius:12px; border:1px solid var(--border);" />
-        ${(img.caption || img.alt) ? `<figcaption style="margin-top:8px; font-size:13.5px; color:var(--muted);">${escapeHtml(img.caption || img.alt)}</figcaption>` : ''}
-      </figure>`;
-  };
+  const buildContactOutput = () => {
+    const defaultHtml = defaultContactMethods.map((def) => {
+      const item = state.contactMethods[def.key];
+      const enabled = Boolean(item?.enabled);
+      const value = String(item?.value || '');
+      const badge = escapeHtml(def.badge);
+      const label = escapeHtml(def.label);
+      const icon = `<span class="iconBadge" aria-hidden="true">${badge}</span>`;
+      const text = `<span class="contactLabel"><strong>${label}</strong><span>${escapeHtml(value)}</span></span>`;
+      if (!enabled || !value) return `<div class="contactBadge">${icon}${text}</div>`;
+      const href = def.key === 'email' ? `mailto:${value}` : value ? `${def.hrefPrefix || ''}${value}` : '';
+      return href ? `<a class="contactBadge" href="${escapeHtml(href)}">${icon}${text}</a>` : `<div class="contactBadge">${icon}${text}</div>`;
+    }).join('');
 
-  const buildHoursTable = (title, rows, dark = false) => {
-    const bg = dark ? 'var(--heroStart)' : 'var(--surface-alt)';
-    const fg = dark ? 'var(--heroText)' : 'var(--text)';
-    const border = dark ? 'rgba(255,255,255,0.15)' : 'var(--border)';
-    return `
-      <section style="flex:1 1 0%; min-width:300px; padding:14px; border-radius:12px; background:${bg}; border:1px solid ${dark ? 'var(--heroStart)' : 'var(--border)'}; color:${fg};">
-        <strong>${escapeHtml(title)}</strong>
-        <table style="width:100%; border-collapse:collapse; font-size:14px; margin-top:8px; color:${fg};">
-          <tbody>
-            ${rows.map((row, idx) => `
-              <tr>
-                <th scope="row" style="padding:6px 0; text-align:left; font-weight:700; border-top:${idx === 0 ? 'none' : `1px solid ${border}`};">${escapeHtml(row.day)}</th>
-                <td style="padding:6px 0; text-align:right; border-top:${idx === 0 ? 'none' : `1px solid ${border}`};">${escapeHtml(row.detail)}</td>
-              </tr>`).join('')}
-          </tbody>
-        </table>
-      </section>`;
-  };
+    const customHtml = state.customContactMethods.filter((item) => item.enabled && (item.label || item.value)).map((item) => {
+      const badge = escapeHtml(item.badge || 'CU');
+      const label = escapeHtml(item.label || 'Custom method');
+      const value = escapeHtml(item.value || '');
+      const icon = `<span class="iconBadge" aria-hidden="true">${badge}</span>`;
+      const text = `<span class="contactLabel"><strong>${label}</strong><span>${value}</span></span>`;
+      const link = String(item.link || '').trim();
+      return link ? `<a class="contactBadge" href="${escapeHtml(link)}">${icon}${text}</a>` : `<div class="contactBadge">${icon}${text}</div>`;
+    }).join('');
 
-  const buildVisitCard = (item, bg, border) => `
-    <div style="flex:1 1 0%; min-width:280px; padding:14px; border-radius:12px; background:${bg}; border:1px solid ${border}; color:var(--text);">
-      <strong>${escapeHtml(item.title)}:</strong> ${escapeHtml(item.body)}
-    </div>`;
-
-  const buildPetBlock = () => {
-    if (!state.sections.pet) return '';
-    const hasImage = state.petImage.trim();
-    return `
-      <section style="margin-top:22px;">
-        <h2 style="margin:0 0 10px 0; font-size:22px; line-height:1.25; color:var(--text);">${escapeHtml(state.petName || 'Mascot corner')}</h2>
-        <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:stretch;">
-          ${hasImage ? `
-            <div style="flex:0 0 auto; min-width:220px; max-width:320px; padding:14px; border-radius:12px; background:var(--surface-alt); border:1px solid var(--border);">
-              <img src="${escapeHtml(state.petImage)}" alt="${escapeHtml(state.petAlt || state.petName || 'Mascot')}" style="width:100%; height:auto; display:block; border-radius:12px; border:1px solid var(--border);" />
-            </div>` : ''}
-          <div style="flex:1 1 280px; padding:14px; border-radius:12px; background:var(--surface-alt); border:1px solid var(--border); color:var(--text);">
-            <div style="font-size:18px; font-weight:700; margin-bottom:6px;">${escapeHtml(state.petTitle || 'Optional mascot corner')}</div>
-            <div style="font-size:14.5px; color:var(--muted);">${escapeHtml(state.petDescription)}</div>
-            <div style="margin-top:10px; font-size:13.5px; color:var(--muted);"><em>${escapeHtml(state.petNote)}</em></div>
-          </div>
-        </div>
-      </section>`;
+    return `${defaultHtml}${customHtml}`;
   };
 
   const buildFragment = () => {
-    const theme = activeTheme();
-    const methods = contactMethodDefs.filter((def) => state.contactMethods[def.key]?.enabled);
+    const theme = currentTheme();
     const images = state.images.filter((img) => img.src.trim());
+    const hoursRows = state.hoursRows.filter((row) => row.day || row.time);
 
     const contactHtml = state.sections.contact ? `
       <section style="margin-top:16px; padding:14px; border-radius:12px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.16); color:var(--hero-text);">
         <div style="font-size:14px; font-weight:700; margin-bottom:10px;">Contact</div>
         <div style="display:grid; gap:10px; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr));">
-          ${methods.map((def) => contactBadge(def, state.contactMethods[def.key])).join('')}
+          ${buildContactOutput()}
         </div>
         <div style="margin-top:10px; font-size:13.5px;"><em>${escapeHtml(state.contactTip)}</em></div>
       </section>` : '';
@@ -610,7 +602,7 @@
     const heroHtml = state.sections.hero ? `
       <section style="display:flex; flex-wrap:wrap; gap:18px; align-items:stretch; padding:18px; border-radius:14px; background:linear-gradient(135deg, var(--hero-start) 0%, var(--hero-mid) 52%, var(--hero-end) 100%); border:1px solid var(--hero-start); color:var(--hero-text);">
         <div style="flex:1; min-width:260px; color:var(--hero-text);">
-          <div style="font-size:12px; letter-spacing:0.12em; text-transform:uppercase; font-weight:700; opacity:0.95;">${escapeHtml(state.eyebrow)} · ${escapeHtml(termLabel())}</div>
+          <div style="font-size:12px; letter-spacing:0.12em; text-transform:uppercase; font-weight:700; opacity:0.95;">${escapeHtml(state.eyebrow)} · ${escapeHtml(currentTermLabel())}</div>
           <div style="font-size:18px; font-weight:700; margin:8px 0 6px;">${escapeHtml(state.introLead)}</div>
           <div style="font-size:14.5px; color:rgba(255,255,255,0.92);">
             <p style="margin:0 0 10px 0;">${escapeHtml(state.introBody)}</p>
@@ -624,7 +616,7 @@
     const quickHtml = state.sections.quickAccess ? `
       <section style="margin-top:16px; display:flex; flex-wrap:wrap; gap:12px;">
         <div style="flex:1 1 0%; min-width:290px; padding:14px; border-radius:12px; background:var(--surface-alt); border:1px solid var(--border); color:var(--text);">
-          <div style="margin-bottom:8px; font-weight:700; color:var(--text);">🎥 Quick Access</div>
+          <div style="margin-bottom:8px; font-weight:700; color:var(--text);">Quick access</div>
           <div style="font-size:14px;">
             <div style="margin-bottom:4px;"><strong>Online:</strong> <a style="color:var(--accent); text-decoration:underline;" href="${escapeHtml(state.zoomUrl)}">Tutorial Center Zoom</a></div>
             <div style="margin-bottom:4px;"><strong>Zoom ID:</strong> ${escapeHtml(state.zoomId)}</div>
@@ -632,7 +624,7 @@
           </div>
         </div>
         <div style="flex:1 1 0%; min-width:290px; padding:14px; border-radius:12px; background:var(--surface-alt); border:1px solid var(--border); color:var(--text);">
-          <div style="margin-bottom:8px; font-weight:700; color:var(--text);">🧭 Tutorial Center Canvas</div>
+          <div style="margin-bottom:8px; font-weight:700; color:var(--text);">Canvas</div>
           <div style="font-size:14px;">For the latest services, schedules, and resources, visit the <a style="color:var(--accent); text-decoration:underline;" href="${escapeHtml(state.canvasUrl)}">${escapeHtml(state.canvasLabel)}</a>.</div>
         </div>
       </section>` : '';
@@ -640,7 +632,13 @@
     const imageHtml = state.sections.images && images.length ? `
       <section style="margin-top:22px;">
         <h2 style="margin:0 0 10px 0; font-size:22px; line-height:1.25; color:var(--text);">Images</h2>
-        <div style="display:flex; flex-wrap:wrap; gap:12px;">${images.map((img, idx) => buildImageFigure(img, idx)).join('')}</div>
+        <div style="display:flex; flex-wrap:wrap; gap:12px;">
+          ${images.map((img, index) => `
+            <figure style="margin:0; flex:1 1 280px; min-width:240px; padding:14px; border-radius:12px; background:var(--surface-alt); border:1px solid var(--border); color:var(--text);">
+              <img src="${escapeHtml(img.src)}" alt="${escapeHtml(img.alt || img.caption || `Image ${index + 1}`)}" style="width:100%; height:auto; display:block; border-radius:12px; border:1px solid var(--border);" />
+              ${(img.caption || img.alt) ? `<figcaption style="margin-top:8px; font-size:13.5px; color:var(--muted);">${escapeHtml(img.caption || img.alt)}</figcaption>` : ''}
+            </figure>`).join('')}
+        </div>
       </section>` : '';
 
     const helpHtml = state.sections.help ? `
@@ -656,10 +654,15 @@
       <section style="margin-top:22px;">
         <h2 style="margin:0 0 10px 0; font-size:22px; line-height:1.25; color:var(--text);">What to expect at the Tutorial Center</h2>
         <div style="display:flex; flex-wrap:wrap; gap:12px; margin-bottom:12px;">
-          ${state.visitCards.slice(0, 2).map((item, idx) => buildVisitCard(item, idx === 0 ? 'var(--soft1)' : 'var(--soft2)', idx === 0 ? '#fb923c' : '#a78bfa')).join('')}
+          ${state.visitCards.slice(0, 2).map((item, index) => `
+            <div style="flex:1 1 0%; min-width:280px; padding:14px; border-radius:12px; background:${index === 0 ? 'var(--soft1)' : 'var(--soft2)'}; border:1px solid ${index === 0 ? '#fb923c' : '#a78bfa'}; color:var(--text);">
+              <strong>${escapeHtml(item.title)}:</strong> ${escapeHtml(item.body)}
+            </div>`).join('')}
         </div>
         <div style="display:flex; flex-wrap:wrap; gap:12px;">
-          ${state.visitCards.slice(2, 4).map((item, idx) => buildVisitCard(item, idx === 0 ? 'var(--soft3)' : 'var(--soft4)', idx === 0 ? '#60a5fa' : '#34d399')).join('')}
+          ${state.visitCards.slice(2, 4).map((item, index) => `
+            <div style="flex:1 1 0%; min-width:280px; padding:14px; border-radius:12px; background:${index === 0 ? 'var(--soft3)' : 'var(--soft4)'}; border:1px solid ${index === 0 ? '#60a5fa' : '#34d399'}; color:var(--text);">
+              <strong>${escapeHtml(item.title)}:</strong> ${escapeHtml(item.body)}</div>`).join('')}
         </div>
         <div style="margin-top:12px; padding:14px; border-radius:12px; background:var(--surface-alt); border:1px solid var(--border); color:var(--text);"><strong>Resources available:</strong> ${escapeHtml(state.resourcesNote)}</div>
         <div style="margin-top:10px; font-size:13.5px; color:var(--muted);"><em>${escapeHtml(state.resourcesTip)} <a style="color:var(--accent); text-decoration:underline;" href="${escapeHtml(state.canvasUrl)}">${escapeHtml(state.canvasLabel)}</a>.</em></div>
@@ -667,30 +670,66 @@
 
     const hoursHtml = state.sections.hours ? `
       <section style="margin-top:22px;">
-        <h2 style="margin:0 0 10px 0; font-size:22px; line-height:1.25; color:var(--text);">Tutorial Center Hours</h2>
-        <div style="display:flex; flex-wrap:wrap; gap:14px;">
-          ${state.centerHours.map((section, idx) => buildHoursTable(section.section, section.rows, idx === 1)).join('')}
+        <h2 style="margin:0 0 10px 0; font-size:22px; line-height:1.25; color:var(--text);">${escapeHtml(state.hoursTitle || 'Hours')}</h2>
+        <div style="padding:14px; border-radius:12px; background:var(--surface-alt); border:1px solid var(--border); color:var(--text);">
+          ${hoursRows.map((row, index) => {
+            const tags = [];
+            if (row.online) tags.push('Online');
+            if (row.inPerson) tags.push('In person');
+            const noteHtml = row.note ? `<div style="margin-top:6px; font-size:13px; color:var(--muted);">${escapeHtml(row.note)}</div>` : '';
+            const tagsHtml = tags.length ? `<div style="margin-top:6px; display:flex; flex-wrap:wrap; gap:6px;">${tags.map((tag) => `<span style="display:inline-flex; align-items:center; padding:3px 8px; border-radius:999px; border:1px solid var(--border); font-size:12px; font-weight:700; color:var(--text); background:var(--surface);">${escapeHtml(tag)}</span>`).join('')}</div>` : '';
+            return `
+              <div style="padding:12px 0; border-top:${index === 0 ? 'none' : '1px solid var(--border)'};">
+                <div style="display:flex; justify-content:space-between; gap:12px; align-items:baseline;">
+                  <strong>${escapeHtml(row.day)}</strong>
+                  <span>${escapeHtml(row.time)}</span>
+                </div>
+                ${tagsHtml}
+                ${noteHtml}
+              </div>`;
+          }).join('')}
+          ${state.hoursNote ? `<div style="margin-top:12px; font-size:13.5px; color:var(--muted);"><em>${escapeHtml(state.hoursNote)}</em></div>` : ''}
         </div>
       </section>` : '';
 
-    const personalHoursHtml = state.sections.personalHours ? `
+    const hobbyHtml = state.sections.hobby ? `
       <section style="margin-top:22px;">
-        <h2 style="margin:0 0 10px 0; font-size:22px; line-height:1.25; color:var(--text);">${escapeHtml(termLabel())} personal hours</h2>
-        <div style="padding:14px; border-radius:12px; background:var(--hero-start); border:1px solid var(--hero-start); color:var(--hero-text);">
-          <table style="width:100%; border-collapse:collapse; font-size:14px; color:var(--hero-text);">
-            <tbody>
-              ${state.personalHours.map((row, idx) => `
-                <tr>
-                  <th scope="row" style="padding:6px 0; text-align:left; font-weight:700; border-top:${idx === 0 ? 'none' : '1px solid rgba(255,255,255,0.15)'};">${escapeHtml(row.day)}</th>
-                  <td style="padding:6px 0; text-align:right; border-top:${idx === 0 ? 'none' : '1px solid rgba(255,255,255,0.15)'};">${escapeHtml(row.detail)}</td>
-                </tr>`).join('')}
-            </tbody>
-          </table>
+        <h2 style="margin:0 0 10px 0; font-size:22px; line-height:1.25; color:var(--text);">${escapeHtml(state.hobbyTitle)}</h2>
+        <div style="padding:14px; border-radius:12px; background:var(--surface-alt); border:1px solid var(--border); color:var(--text);">
+          <div style="margin-bottom:10px; color:var(--muted);">${escapeHtml(state.hobbyBlurb)}</div>
+          <ul style="margin:0; padding-left:18px;">${state.hobbyItems.filter(Boolean).map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>
         </div>
-        <div style="margin-top:10px; font-size:13.5px; color:var(--muted);"><em>${escapeHtml(state.closingNote)}</em></div>
       </section>` : '';
 
-    const petHtml = state.sections.pet ? buildPetBlock() : '';
+    const customHtml = state.sections.custom ? `
+      <section style="margin-top:22px;">
+        <h2 style="margin:0 0 10px 0; font-size:22px; line-height:1.25; color:var(--text);">${escapeHtml(state.customTitle)}</h2>
+        <div style="padding:14px; border-radius:12px; background:var(--surface-alt); border:1px solid var(--border); color:var(--text);">
+          <div style="margin-bottom:10px; white-space:pre-wrap;">${escapeHtml(state.customBody)}</div>
+          <ul style="margin:0; padding-left:18px;">${state.customItems.filter(Boolean).map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>
+        </div>
+      </section>` : '';
+
+    const petHtml = state.sections.pet ? `
+      <section style="margin-top:22px;">
+        <h2 style="margin:0 0 10px 0; font-size:22px; line-height:1.25; color:var(--text);">${escapeHtml(state.petTitle || 'Optional mascot corner')}</h2>
+        <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:stretch;">
+          ${state.petImage.trim() ? `
+            <div style="flex:0 0 auto; min-width:220px; max-width:320px; padding:14px; border-radius:12px; background:var(--surface-alt); border:1px solid var(--border);">
+              <img src="${escapeHtml(state.petImage)}" alt="${escapeHtml(state.petAlt || state.petName || 'Mascot')}" style="width:100%; height:auto; display:block; border-radius:12px; border:1px solid var(--border);" />
+            </div>` : ''}
+          <div style="flex:1 1 280px; padding:14px; border-radius:12px; background:var(--surface-alt); border:1px solid var(--border); color:var(--text);">
+            <div style="font-size:18px; font-weight:700; margin-bottom:6px;">${escapeHtml(state.petName || 'Mascot')}</div>
+            <div style="font-size:14.5px; color:var(--muted);">${escapeHtml(state.petDescription)}</div>
+            <div style="margin-top:10px; font-size:13.5px; color:var(--muted);"><em>${escapeHtml(state.petNote)}</em></div>
+          </div>
+        </div>
+      </section>` : '';
+
+    const closingHtml = state.sections.closingNote ? `
+      <section style="margin-top:22px; padding:14px; border-radius:12px; background:var(--surface-alt); border:1px solid var(--border); color:var(--text);">
+        <strong>Closing note:</strong> ${escapeHtml(state.closingNote)}
+      </section>` : '';
 
     return `
       <div style="--page-bg:${theme.pageBg}; --surface:${theme.surface}; --surface-alt:${theme.surfaceAlt}; --text:${theme.text}; --muted:${theme.muted}; --border:${theme.border}; --accent:${theme.accent}; --accent-2:${theme.accent2}; --hero-start:${theme.heroStart}; --hero-mid:${theme.heroMid}; --hero-end:${theme.heroEnd}; --hero-text:${theme.heroText}; max-width:960px; margin:0 auto; padding:24px; font-family:Arial, Helvetica, sans-serif; line-height:1.55; color:var(--text); background:var(--page-bg);">
@@ -705,13 +744,15 @@
         ${helpHtml}
         ${servicesHtml}
         ${hoursHtml}
-        ${personalHoursHtml}
+        ${hobbyHtml}
+        ${customHtml}
         ${petHtml}
+        ${closingHtml}
       </div>`;
   };
 
   const buildStandaloneHtml = () => {
-    const theme = activeTheme();
+    const theme = currentTheme();
     return `<!doctype html>
 <html lang="en">
 <head>
@@ -738,49 +779,67 @@ ${buildFragment()}
     saveState();
   };
 
-  const parseColorName = (name) => name.endsWith('__color') ? name.replace(/__color$/, '') : name;
+  const setColorPair = (form, baseName, value) => {
+    const textInput = form.querySelector(`input[name="${CSS.escape(baseName)}"]`);
+    const colorInput = form.querySelector(`input[name="${CSS.escape(baseName)}__color"]`);
+    if (textInput) textInput.value = value;
+    if (colorInput) colorInput.value = value;
+  };
 
   const applyInput = (name, value, checked = false) => {
-    if (name.startsWith('sections.')) {
-      const key = name.split('.')[1];
-      state.sections[key] = checked;
-      return;
-    }
-
     if (name === 'term' || name === 'palettePreset') {
       state[name] = value;
       if (name === 'palettePreset' && value !== 'custom') {
         const preset = presets[value] || presets.spring;
-        Object.assign(state, {
-          pageBg: preset.pageBg, surface: preset.surface, surfaceAlt: preset.surfaceAlt, text: preset.text, muted: preset.muted, border: preset.border,
-          accent: preset.accent, accent2: preset.accent2, heroStart: preset.heroStart, heroMid: preset.heroMid, heroEnd: preset.heroEnd, heroText: preset.heroText,
-        });
+        state.pageBg = preset.pageBg;
+        state.surface = preset.surface;
+        state.surfaceAlt = preset.surfaceAlt;
+        state.text = preset.text;
+        state.muted = preset.muted;
+        state.border = preset.border;
+        state.accent = preset.accent;
+        state.accent2 = preset.accent2;
+        state.heroStart = preset.heroStart;
+        state.heroMid = preset.heroMid;
+        state.heroEnd = preset.heroEnd;
+        state.heroText = preset.heroText;
       }
       return;
     }
 
-    const colorName = parseColorName(name);
+    if (name.startsWith('sections.')) {
+      state.sections[name.split('.')[1]] = checked;
+      return;
+    }
+
+    const colorName = name.endsWith('__color') ? name.slice(0, -7) : name;
     if (['pageBg', 'surface', 'surfaceAlt', 'text', 'muted', 'border', 'accent', 'accent2', 'heroStart', 'heroMid', 'heroEnd', 'heroText'].includes(colorName)) {
       state[colorName] = value;
       state.palettePreset = 'custom';
       return;
     }
 
-    const contactMethod = name.match(/^contactMethods\.(.+?)\.(enabled|value)$/);
-    if (contactMethod) {
-      const key = contactMethod[1];
-      const prop = contactMethod[2];
-      if (!state.contactMethods[key]) state.contactMethods[key] = { enabled: false, value: '' };
+    const contactMatch = name.match(/^contactMethods\.(email|discord|canvas)\.(enabled|value)$/);
+    if (contactMatch) {
+      const key = contactMatch[1];
+      const prop = contactMatch[2];
       state.contactMethods[key][prop] = prop === 'enabled' ? checked : value;
+      return;
+    }
+
+    const customContactMatch = name.match(/^customContactMethods\[(\d+)\]\.(enabled|label|badge|value|link)$/);
+    if (customContactMatch) {
+      const index = Number(customContactMatch[1]);
+      const prop = customContactMatch[2];
+      if (!state.customContactMethods[index]) state.customContactMethods[index] = { enabled: false, label: '', badge: 'CU', value: '', link: '' };
+      state.customContactMethods[index][prop] = prop === 'enabled' ? checked : value;
       return;
     }
 
     const imageMatch = name.match(/^images\[(\d+)\]\.(src|alt|caption)$/);
     if (imageMatch) {
       const index = Number(imageMatch[1]);
-      const prop = imageMatch[2];
-      if (!state.images[index]) state.images[index] = { src: '', alt: '', caption: '' };
-      state.images[index][prop] = value;
+      state.images[index][imageMatch[2]] = value;
       return;
     }
 
@@ -792,29 +851,33 @@ ${buildFragment()}
 
     const visitMatch = name.match(/^visitCards\[(\d+)\]\.(title|body)$/);
     if (visitMatch) {
-      const idx = Number(visitMatch[1]);
-      state.visitCards[idx][visitMatch[2]] = value;
+      const index = Number(visitMatch[1]);
+      state.visitCards[index][visitMatch[2]] = value;
       return;
     }
 
-    const centerSectionMatch = name.match(/^centerHours\[(\d+)\]\.section$/);
-    if (centerSectionMatch) {
-      state.centerHours[Number(centerSectionMatch[1])].section = value;
+    const hoursMatch = name.match(/^hoursRows\[(\d+)\]\.(day|time|note)$/);
+    if (hoursMatch) {
+      const index = Number(hoursMatch[1]);
+      state.hoursRows[index][hoursMatch[2]] = value;
+      return;
+    }
+    const hoursToggleMatch = name.match(/^hoursRows\[(\d+)\]\.(online|inPerson)$/);
+    if (hoursToggleMatch) {
+      const index = Number(hoursToggleMatch[1]);
+      state.hoursRows[index][hoursToggleMatch[2]] = checked;
       return;
     }
 
-    const centerRowMatch = name.match(/^centerHours\[(\d+)\]\.rows\[(\d+)\]\.(day|detail)$/);
-    if (centerRowMatch) {
-      const s = Number(centerRowMatch[1]);
-      const r = Number(centerRowMatch[2]);
-      state.centerHours[s].rows[r][centerRowMatch[3]] = value;
+    const hobbyMatch = name.match(/^hobbyItems\[(\d+)\]$/);
+    if (hobbyMatch) {
+      state.hobbyItems[Number(hobbyMatch[1])] = value;
       return;
     }
 
-    const personalMatch = name.match(/^personalHours\[(\d+)\]\.(day|detail)$/);
-    if (personalMatch) {
-      const r = Number(personalMatch[1]);
-      state.personalHours[r][personalMatch[2]] = value;
+    const customBulletMatch = name.match(/^customItems\[(\d+)\]$/);
+    if (customBulletMatch) {
+      state.customItems[Number(customBulletMatch[1])] = value;
       return;
     }
 
@@ -823,246 +886,32 @@ ${buildFragment()}
     }
   };
 
-  const renderEditor = () => {
-    const setupBlock = `
-      <section class="fieldGroup card">
-        <div class="sectionHead sectionLocalHead">
-          <div>
-            <h3>Site setup</h3>
-            <p class="groupNote">Term, colors, and the section map.</p>
-          </div>
-        </div>
-        <div class="fieldGrid topGrid">
-          <label class="field">
-            <span class="labelText">Term</span>
-            <select name="term">
-              <option value="fall" ${state.term === 'fall' ? 'selected' : ''}>Fall</option>
-              <option value="spring" ${state.term === 'spring' ? 'selected' : ''}>Spring</option>
-              <option value="summer" ${state.term === 'summer' ? 'selected' : ''}>Summer</option>
-            </select>
-          </label>
-          <label class="field">
-            <span class="labelText">Color preset</span>
-            <select name="palettePreset">
-              <option value="spring" ${state.palettePreset === 'spring' ? 'selected' : ''}>Spring</option>
-              <option value="summer" ${state.palettePreset === 'summer' ? 'selected' : ''}>Summer</option>
-              <option value="fall" ${state.palettePreset === 'fall' ? 'selected' : ''}>Fall</option>
-              <option value="custom" ${state.palettePreset === 'custom' ? 'selected' : ''}>Custom</option>
-            </select>
-          </label>
-          <div class="setupNote">Use the local toggles below to trim or expand each section.</div>
-        </div>
-        <div class="sectionToggleGrid">
-          ${sectionDefs.map((s) => switchField(s.label, `sections.${s.key}`, Boolean(state.sections[s.key]), s.note)).join('')}
-        </div>
-        <div class="fieldGrid swatchGrid" style="margin-top: 12px;">
-          ${colorField('Hero start', 'heroStart', state.heroStart)}
-          ${colorField('Hero middle', 'heroMid', state.heroMid)}
-          ${colorField('Hero end', 'heroEnd', state.heroEnd)}
-          ${colorField('Hero text', 'heroText', state.heroText)}
-          ${colorField('Accent', 'accent', state.accent)}
-          ${colorField('Accent 2', 'accent2', state.accent2)}
-          ${colorField('Page background', 'pageBg', state.pageBg)}
-          ${colorField('Surface', 'surface', state.surface)}
-          ${colorField('Surface alt', 'surfaceAlt', state.surfaceAlt)}
-          ${colorField('Text', 'text', state.text)}
-          ${colorField('Muted text', 'muted', state.muted)}
-          ${colorField('Border', 'border', state.border)}
-        </div>
-      </section>`;
-
-    const sectionBlocks = [
-      sectionCard('hero', 'Header and intro', 'This is the top block students see first.', `
-        <div class="fieldGrid">
-          ${textField('Page title', 'pageTitle', state.pageTitle)}
-          ${textField('Eyebrow', 'eyebrow', state.eyebrow)}
-          ${textField('Tutor name', 'tutorName', state.tutorName)}
-          ${textField('Tutor role', 'tutorRole', state.tutorRole)}
-          ${textField('Intro lead', 'introLead', state.introLead, 'text', true)}
-          ${textField('Intro body', 'introBody', state.introBody, 'textarea', true)}
-          ${textField('Intro extra', 'introExtra', state.introExtra, 'textarea', true)}
-          ${textField('Intro goal', 'introGoal', state.introGoal, 'text', true)}
-        </div>`),
-      sectionCard('contact', 'Contact methods', 'Pick the methods students should actually see.', `
-        <div class="fieldGrid contactGrid">
-          ${contactMethodDefs.map((def) => {
-            const item = state.contactMethods[def.key] || { enabled: false, value: '' };
-            return `
-              <div class="rowCard contactMethodCard">
-                <div class="sectionHead methodHead">
-                  <div class="methodTitle">
-                    <span class="iconBadge" aria-hidden="true">${escapeHtml(def.icon)}</span>
-                    <div>
-                      <strong>${escapeHtml(def.label)}</strong>
-                      <div class="muted small">${escapeHtml(def.placeholder)}</div>
-                    </div>
-                  </div>
-                  ${switchField('Include', `contactMethods.${def.key}.enabled`, Boolean(item.enabled))}
-                </div>
-                <label class="field full">
-                  <span class="labelText">${escapeHtml(def.label)} value</span>
-                  <input type="text" name="contactMethods.${def.key}.value" value="${escapeHtml(item.value)}" placeholder="${escapeHtml(def.placeholder)}" />
-                </label>
-              </div>`;
-          }).join('')}
-        </div>
-        <div class="fieldGrid" style="margin-top: 12px;">${textField('Contact tip', 'contactTip', state.contactTip, 'text', true)}</div>`),
-      sectionCard('quickAccess', 'Quick access', 'Zoom, location, and the main Canvas page.', `
-        <div class="fieldGrid">
-          ${textField('Zoom URL', 'zoomUrl', state.zoomUrl, 'url', true)}
-          ${textField('Zoom ID', 'zoomId', state.zoomId)}
-          ${textField('In-person location', 'inPersonLocation', state.inPersonLocation, 'text', true)}
-          ${textField('Canvas page URL', 'canvasUrl', state.canvasUrl, 'url', true)}
-          ${textField('Canvas link label', 'canvasLabel', state.canvasLabel)}
-        </div>`),
-      sectionCard('images', 'Images', 'Use one image or a small gallery. URLs or uploads both work.', `
-        <div class="fieldGrid">${state.images.map((img, idx) => `
-          <div class="rowCard imageRow">
-            <div class="rowGrid imageGrid">
-              <label class="field">
-                <span class="miniLabel">Image URL or data</span>
-                <input name="images[${idx}].src" value="${escapeHtml(img.src)}" placeholder="https://..." />
-              </label>
-              <label class="field">
-                <span class="miniLabel">Alt text</span>
-                <input name="images[${idx}].alt" value="${escapeHtml(img.alt)}" placeholder="Describe the image" />
-              </label>
-              <label class="field fullField">
-                <span class="miniLabel">Caption</span>
-                <input name="images[${idx}].caption" value="${escapeHtml(img.caption)}" placeholder="Optional caption" />
-              </label>
-              <label class="field fullField filePicker">
-                <span class="miniLabel">Upload image</span>
-                <input type="file" accept="image/*" data-image-file="${idx}" />
-              </label>
-              <div class="helperStrip"><button class="ghostBtn" type="button" data-remove-image="${idx}">Remove</button></div>
-            </div>
-          </div>`).join('') || '<p class="muted">No image slots yet.</p>'}</div>
-        <div class="helperStrip" style="margin-top: 12px;"><button class="ghostBtn" type="button" data-add-image>Add image</button></div>`),
-      sectionCard('help', 'How I can help', 'Short bullets read better than AI filler.', `
-        <div class="fieldGrid">${state.helpItems.map((item, idx) => textField(`Help item ${idx + 1}`, `helpItems[${idx}]`, item, 'textarea', true)).join('')}</div>
-        <div class="helperStrip" style="margin-top: 12px;"><button class="ghostBtn" type="button" data-add-help-item>Add help item</button></div>
-        <div class="fieldGrid" style="margin-top: 12px;">${textField('Course note', 'courseNote', state.courseNote, 'textarea', true)}</div>`),
-      sectionCard('services', 'What to expect at the Tutorial Center', 'Small service cards that skim well.', `
-        <div class="fieldGrid">${state.visitCards.map((card, idx) => `
-          <div class="rowCard">
-            <div class="rowGrid serviceGrid">
-              <label class="field">
-                <span class="miniLabel">Card title</span>
-                <input name="visitCards[${idx}].title" value="${escapeHtml(card.title)}" />
-              </label>
-              <label class="field fullField">
-                <span class="miniLabel">Card text</span>
-                <input name="visitCards[${idx}].body" value="${escapeHtml(card.body)}" />
-              </label>
-              <div class="helperStrip"><button class="ghostBtn" type="button" data-remove-visit-card="${idx}">Remove</button></div>
-            </div>
-          </div>`).join('')}</div>
-        <div class="helperStrip" style="margin-top: 12px;"><button class="ghostBtn" type="button" data-add-visit-card>Add card</button></div>
-        <div class="fieldGrid" style="margin-top: 12px;">
-          ${textField('Resources note', 'resourcesNote', state.resourcesNote, 'textarea', true)}
-          ${textField('Resources tip', 'resourcesTip', state.resourcesTip, 'text', true)}
-        </div>`),
-      sectionCard('hours', 'Tutorial Center hours', 'Prefilled, but easy to change later.', `
-        <div class="fieldGrid">${state.centerHours.map((section, sectionIndex) => `
-          <div class="rowCard">
-            <div class="rowGrid sectionHeaderGrid">
-              <label class="field fullField">
-                <span class="miniLabel">Section label</span>
-                <input name="centerHours[${sectionIndex}].section" value="${escapeHtml(section.section)}" />
-              </label>
-              <div class="helperStrip"><button class="ghostBtn" type="button" data-add-center-row="${sectionIndex}">Add row</button></div>
-            </div>
-            <div class="hoursRows">${section.rows.map((row, rowIndex) => `
-              <div class="rowGrid hourRow">
-                <label class="field">
-                  <span class="miniLabel">Day</span>
-                  <input name="centerHours[${sectionIndex}].rows[${rowIndex}].day" value="${escapeHtml(row.day)}" />
-                </label>
-                <label class="field">
-                  <span class="miniLabel">Detail</span>
-                  <input name="centerHours[${sectionIndex}].rows[${rowIndex}].detail" value="${escapeHtml(row.detail)}" />
-                </label>
-                <div class="helperStrip">
-                  <button class="ghostBtn" type="button" data-add-center-below="${sectionIndex}" data-index="${rowIndex}">Add below</button>
-                  <button class="ghostBtn" type="button" data-remove-center-row="${sectionIndex}" data-index="${rowIndex}">Remove</button>
-                </div>
-              </div>`).join('')}</div>
-          </div>`).join('')}</div>`),
-      sectionCard('personalHours', `${escapeHtml(termLabel())} personal hours`, 'Use this for your embedded schedule.', `
-        <div class="fieldGrid">${state.personalHours.map((row, rowIndex) => `
-          <div class="rowCard">
-            <div class="rowGrid hourRow">
-              <label class="field">
-                <span class="miniLabel">Day</span>
-                <input name="personalHours[${rowIndex}].day" value="${escapeHtml(row.day)}" />
-              </label>
-              <label class="field">
-                <span class="miniLabel">Detail</span>
-                <input name="personalHours[${rowIndex}].detail" value="${escapeHtml(row.detail)}" />
-              </label>
-              <div class="helperStrip">
-                <button class="ghostBtn" type="button" data-add-personal-below="${rowIndex}">Add below</button>
-                <button class="ghostBtn" type="button" data-remove-personal-row="${rowIndex}">Remove</button>
-              </div>
-            </div>
-          </div>`).join('')}</div>
-        <div class="fieldGrid" style="margin-top: 12px;">${textField('Closing note', 'closingNote', state.closingNote, 'text', true)}</div>`),
-      sectionCard('pet', 'Pet / mascot', 'Optional personality block.', `
-        <div class="fieldGrid">
-          ${textField('Pet name', 'petName', state.petName)}
-          ${textField('Pet image URL or data', 'petImage', state.petImage, 'text', true)}
-          ${textField('Pet alt text', 'petAlt', state.petAlt)}
-          ${textField('Pet description', 'petDescription', state.petDescription, 'textarea', true)}
-          ${textField('Pet note', 'petNote', state.petNote, 'text', true)}
-        </div>`),
-      sectionCard('closingNote', 'Closing note', 'Keep the final line short.', `<div class="fieldGrid">${textField('Closing note', 'closingNote', state.closingNote, 'text', true)}</div>`),
-    ];
-
-    editorEl.innerHTML = `<form id="generator-form" class="editorForm">${setupBlock}${sectionBlocks.join('')}</form>`;
-  };
-
-  const render = () => {
-    outputEl.value = buildFragment();
-    previewEl.srcdoc = buildStandaloneHtml();
-    saveState();
-  };
-
-  const syncAndRender = () => {
-    renderEditor();
-    render();
-    bindForm();
-  };
-
   const bindForm = () => {
     const form = document.querySelector('#generator-form');
     if (!form) return;
 
-    form.addEventListener('input', async (event) => {
+    const rerender = () => {
+      renderEditor();
+      renderPreview();
+    };
+
+    form.addEventListener('input', (event) => {
       const target = event.target;
       if (!(target instanceof HTMLElement)) return;
       const name = target.getAttribute('name');
       if (!name) return;
-
       const type = target.getAttribute('type');
-      if (type === 'checkbox') {
-        applyInput(name, '', target.checked);
-      } else {
-        applyInput(name, target.value, false);
-      }
+      if (type === 'checkbox') applyInput(name, '', target.checked);
+      else applyInput(name, target.value, false);
 
       if (name.endsWith('__color')) {
-        const baseName = name.replace(/__color$/, '');
-        const textInput = form.querySelector(`input[name="${CSS.escape(baseName)}"]`);
-        if (textInput) textInput.value = target.value;
+        const baseName = name.slice(0, -7);
+        applyInput(baseName, target.value, false);
+        setColorPair(form, baseName, target.value);
       }
 
-      if (name === 'term') {
-        renderEditor();
-        bindForm();
-      }
-
-      render();
+      renderPreview();
+      if (name === 'term' || name === 'palettePreset') rerender();
     });
 
     form.addEventListener('change', async (event) => {
@@ -1071,37 +920,10 @@ ${buildFragment()}
       const name = target.getAttribute('name');
       if (!name) return;
 
-      if (name === 'palettePreset') {
-        applyInput(name, target.value, false);
-        if (target.value !== 'custom') {
-          renderEditor();
-          bindForm();
-        }
-        render();
-        return;
-      }
-
-      if (name === 'term') {
-        applyInput(name, target.value, false);
-        renderEditor();
-        bindForm();
-        render();
-        return;
-      }
-
-      if (name.endsWith('__color')) {
-        const baseName = name.replace(/__color$/, '');
-        const textInput = form.querySelector(`input[name="${CSS.escape(baseName)}"]`);
-        if (textInput) textInput.value = target.value;
-        applyInput(baseName, target.value, false);
-        render();
-        return;
-      }
-
       if (target.getAttribute('type') === 'file') {
-        const fileInput = target;
-        const index = Number(fileInput.dataset.imageFile);
-        const file = fileInput.files && fileInput.files[0];
+        const input = target;
+        const idx = Number(input.dataset.imageFile);
+        const file = input.files && input.files[0];
         if (!file) return;
         const dataUrl = await new Promise((resolve, reject) => {
           const reader = new FileReader();
@@ -1109,91 +931,117 @@ ${buildFragment()}
           reader.onerror = () => reject(reader.error);
           reader.readAsDataURL(file);
         });
-        state.images[index].src = dataUrl;
-        if (!state.images[index].alt) state.images[index].alt = file.name.replace(/\.[^.]+$/, '');
+        state.images[idx].src = dataUrl;
+        if (!state.images[idx].alt) state.images[idx].alt = file.name.replace(/\.[^.]+$/, '');
         renderEditor();
-        bindForm();
-        render();
+        renderPreview();
+        return;
+      }
+
+      if (target.tagName === 'SELECT') {
+        applyInput(name, target.value, false);
+        if (name === 'palettePreset' || name === 'term') {
+          renderEditor();
+          renderPreview();
+        }
+        return;
+      }
+
+      if (name.endsWith('__color')) {
+        const baseName = name.slice(0, -7);
+        applyInput(baseName, target.value, false);
+        renderPreview();
+        return;
+      }
+
+      if (target.getAttribute('type') === 'checkbox') {
+        applyInput(name, '', target.checked);
+        renderPreview();
       }
     });
 
-    const onClick = (selector, handler) => {
-      form.querySelectorAll(selector).forEach((btn) => btn.addEventListener('click', handler));
-    };
+    const clickMap = [
+      ['[data-add-image]', () => {
+        if (state.images.length >= 4) return;
+        state.images = [...state.images, { src: '', alt: '', caption: '' }];
+        rerender();
+      }],
+      ['[data-remove-image]', (event) => {
+        const index = Number(event.currentTarget.dataset.removeImage);
+        state.images.splice(index, 1);
+        rerender();
+      }],
+      ['[data-add-help-item]', () => {
+        state.helpItems = [...state.helpItems, 'New help item'];
+        rerender();
+      }],
+      ['[data-add-visit-card]', () => {
+        state.visitCards = [...state.visitCards, { title: 'New card', body: 'Edit this text.' }].slice(0, 4);
+        rerender();
+      }],
+      ['[data-remove-visit-card]', (event) => {
+        const index = Number(event.currentTarget.dataset.removeVisitCard);
+        if (state.visitCards.length <= 1) return;
+        state.visitCards.splice(index, 1);
+        rerender();
+      }],
+      ['[data-add-custom-contact]', () => {
+        state.customContactMethods = [...state.customContactMethods, { enabled: false, label: 'Custom method', badge: 'CU', value: '', link: '' }];
+        rerender();
+      }],
+      ['[data-remove-custom-contact]', (event) => {
+        const index = Number(event.currentTarget.dataset.removeCustomContact);
+        if (state.customContactMethods.length <= 1) {
+          state.customContactMethods[0] = { enabled: false, label: '', badge: 'CU', value: '', link: '' };
+        } else {
+          state.customContactMethods.splice(index, 1);
+        }
+        rerender();
+      }],
+      ['[data-add-hour-row]', () => {
+        state.hoursRows = [...state.hoursRows, { day: 'New day', time: 'New time', online: true, inPerson: false, note: '' }];
+        rerender();
+      }],
+      ['[data-add-hour-below]', (event) => {
+        const index = Number(event.currentTarget.dataset.addHourBelow);
+        state.hoursRows.splice(index + 1, 0, { day: 'New day', time: 'New time', online: true, inPerson: false, note: '' });
+        rerender();
+      }],
+      ['[data-remove-hour-row]', (event) => {
+        const index = Number(event.currentTarget.dataset.removeHourRow);
+        if (state.hoursRows.length <= 1) return;
+        state.hoursRows.splice(index, 1);
+        rerender();
+      }],
+      ['[data-add-hobby-item]', () => {
+        state.hobbyItems = [...state.hobbyItems, 'New hobby item'];
+        rerender();
+      }],
+      ['[data-remove-hobby-item]', () => {
+        if (state.hobbyItems.length <= 1) return;
+        state.hobbyItems.pop();
+        rerender();
+      }],
+      ['[data-add-custom-item]', () => {
+        state.customItems = [...state.customItems, 'New custom bullet'];
+        rerender();
+      }],
+      ['[data-remove-custom-item]', () => {
+        if (state.customItems.length <= 1) return;
+        state.customItems.pop();
+        rerender();
+      }],
+    ];
 
-    onClick('[data-add-image]', () => {
-      if (state.images.length >= 4) return;
-      state.images = [...state.images, { src: '', alt: '', caption: '' }];
-      renderEditor();
-      bindForm();
-      render();
-    });
-    onClick('[data-remove-image]', (event) => {
-      const idx = Number(event.currentTarget.dataset.removeImage);
-      state.images.splice(idx, 1);
-      renderEditor();
-      bindForm();
-      render();
-    });
-    onClick('[data-add-help-item]', () => {
-      state.helpItems = [...state.helpItems, 'New help item'];
-      renderEditor();
-      bindForm();
-      render();
-    });
-    onClick('[data-add-visit-card]', () => {
-      state.visitCards = [...state.visitCards, { title: 'New card', body: 'Edit this text.' }].slice(0, 4);
-      renderEditor();
-      bindForm();
-      render();
-    });
-    onClick('[data-remove-visit-card]', (event) => {
-      const idx = Number(event.currentTarget.dataset.removeVisitCard);
-      if (state.visitCards.length <= 1) return;
-      state.visitCards.splice(idx, 1);
-      renderEditor();
-      bindForm();
-      render();
-    });
-    onClick('[data-add-center-row]', (event) => {
-      const idx = Number(event.currentTarget.dataset.addCenterRow);
-      state.centerHours[idx].rows.push({ day: 'New day', detail: 'New time' });
-      renderEditor();
-      bindForm();
-      render();
-    });
-    onClick('[data-add-center-below]', (event) => {
-      const s = Number(event.currentTarget.dataset.addCenterBelow);
-      const r = Number(event.currentTarget.dataset.index);
-      state.centerHours[s].rows.splice(r + 1, 0, { day: 'New day', detail: 'New time' });
-      renderEditor();
-      bindForm();
-      render();
-    });
-    onClick('[data-remove-center-row]', (event) => {
-      const s = Number(event.currentTarget.dataset.removeCenterRow);
-      const r = Number(event.currentTarget.dataset.index);
-      if (state.centerHours[s].rows.length <= 1) return;
-      state.centerHours[s].rows.splice(r, 1);
-      renderEditor();
-      bindForm();
-      render();
-    });
-    onClick('[data-add-personal-below]', (event) => {
-      const r = Number(event.currentTarget.dataset.addPersonalBelow);
-      state.personalHours.splice(r + 1, 0, { day: 'New day', detail: 'New time' });
-      renderEditor();
-      bindForm();
-      render();
-    });
-    onClick('[data-remove-personal-row]', (event) => {
-      const r = Number(event.currentTarget.dataset.removePersonalRow);
-      if (state.personalHours.length <= 1) return;
-      state.personalHours.splice(r, 1);
-      renderEditor();
-      bindForm();
-      render();
-    });
+    for (const [selector, handler] of clickMap) {
+      form.querySelectorAll(selector).forEach((node) => node.addEventListener('click', handler));
+    }
+  };
+
+  const renderApp = () => {
+    renderEditor();
+    bindForm();
+    renderPreview();
   };
 
   const copyHtml = async () => {
@@ -1212,12 +1060,12 @@ ${buildFragment()}
   const downloadHtml = () => {
     const blob = new Blob([buildStandaloneHtml()], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'embedded-tutor-page.html';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'embedded-tutor-page.html';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
     URL.revokeObjectURL(url);
     setStatus('Downloaded full local HTML page.');
   };
@@ -1225,16 +1073,11 @@ ${buildFragment()}
   const reset = () => {
     state = defaultState();
     localStorage.removeItem(STORAGE_KEY);
-    renderEditor();
-    bindForm();
-    render();
+    renderApp();
     setStatus('Reset to defaults.');
   };
 
-  renderEditor();
-  bindForm();
-  render();
-
+  renderApp();
   copyBtns.forEach((btn) => btn.addEventListener('click', copyHtml));
   downloadBtn?.addEventListener('click', downloadHtml);
   resetBtn?.addEventListener('click', reset);
