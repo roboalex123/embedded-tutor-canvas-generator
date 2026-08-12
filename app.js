@@ -980,7 +980,8 @@ ${buildFragment()}
       const name = target.getAttribute('name');
       if (!name) return;
       const type = target.getAttribute('type');
-      if (type === 'checkbox') applyInput(name, '', target.checked);
+      const isCheckbox = type === 'checkbox';
+      if (isCheckbox) applyInput(name, '', target.checked);
       else applyInput(name, target.value, false);
 
       if (name.endsWith('__color')) {
@@ -989,8 +990,11 @@ ${buildFragment()}
         setColorPair(form, baseName, target.value);
       }
 
-      renderPreview();
-      if (name === 'term' || name === 'palettePreset') rerender();
+      if (isCheckbox || name === 'term' || name === 'palettePreset' || name.startsWith('sections.')) {
+        rerender();
+      } else {
+        renderPreview();
+      }
     });
 
     form.addEventListener('change', async (event) => {
