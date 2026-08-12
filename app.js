@@ -679,10 +679,10 @@
           ${contactHtml}
         </div>
         ${heroImage ? `
-          <div class="heroImageFrame" style="flex:0 1 280px; min-width:220px; max-width:300px; align-self:flex-start; margin-top:4px;">
-            <figure style="border-radius:20px; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.30); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); box-shadow:0 12px 30px rgba(0,0,0,0.16); overflow:hidden; display:flex; flex-direction:column; gap:8px;">
-              <img src="${escapeHtml(heroImage.src)}" alt="${escapeHtml(heroImage.alt || heroImage.caption || 'Hero image')}" />
-              ${(heroImage.caption || heroImage.alt) ? `<figcaption style="padding:0 2px; margin:0; font-style:italic; font-size:12.5px; line-height:1.35; color:rgba(255,255,255,0.90);">${escapeHtml(heroImage.caption || heroImage.alt)}</figcaption>` : ''}
+          <div class="heroImageFrame" style="flex:0 1 310px; min-width:240px; max-width:330px; align-self:center; margin-top:0; justify-content:center;">
+            <figure style="border-radius:26px; background:rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.36); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); box-shadow:0 14px 34px rgba(0,0,0,0.18); overflow:hidden; display:flex; flex-direction:column; gap:10px; padding:14px;">
+              <img src="${escapeHtml(heroImage.src)}" alt="${escapeHtml(heroImage.alt || heroImage.caption || 'Hero image')}" style="border-radius:18px;" />
+              ${(heroImage.caption || heroImage.alt) ? `<figcaption style="padding:0 2px; margin:0; font-style:italic; font-size:12.5px; line-height:1.35; color:rgba(255,255,255,0.90); text-align:center;">${escapeHtml(heroImage.caption || heroImage.alt)}</figcaption>` : ''}
             </figure>
           </div>` : ''}
       </section>` : '';
