@@ -679,10 +679,10 @@
           ${contactHtml}
         </div>
         ${heroImage ? `
-          <div class="heroImageFrame" style="flex:0 1 190px; min-width:160px; max-width:220px;">
-            <figure>
+          <div class="heroImageFrame" style="flex:0 1 280px; min-width:220px; max-width:300px;">
+            <figure style="border-radius:20px; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.30); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); box-shadow:0 12px 30px rgba(0,0,0,0.16); overflow:hidden;">
               <img src="${escapeHtml(heroImage.src)}" alt="${escapeHtml(heroImage.alt || heroImage.caption || 'Hero image')}" />
-              ${(heroImage.caption || heroImage.alt) ? `<figcaption>${escapeHtml(heroImage.caption || heroImage.alt)}</figcaption>` : ''}
+              ${(heroImage.caption || heroImage.alt) ? `<figcaption style="padding:0 2px;">${escapeHtml(heroImage.caption || heroImage.alt)}</figcaption>` : ''}
             </figure>
           </div>` : ''}
       </section>` : '';
