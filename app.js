@@ -650,6 +650,7 @@
     const theme = currentTheme();
     const images = state.images.filter((img) => img.src.trim());
     const hoursRows = state.hoursRows.filter((row) => row.day || row.time);
+    const myHoursRows = state.myHoursRows.filter((row) => row.day || row.time);
 
     const contactHtml = state.sections.contact ? `
       <section style="margin-top:16px; padding:14px; border-radius:12px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.16); color:var(--hero-text);">
@@ -753,6 +754,30 @@
         </div>
       </section>` : '';
 
+    const myHoursHtml = state.sections.myHours ? `
+      <section style="margin-top:22px;">
+        <h2 style="margin:0 0 10px 0; font-size:22px; line-height:1.25; color:var(--text);">${escapeHtml(state.myHoursTitle || 'My hours')}</h2>
+        <div style="padding:14px; border-radius:12px; background:var(--surface-alt); border:1px solid var(--border); color:var(--text);">
+          ${myHoursRows.map((row, index) => {
+            const tags = [];
+            if (row.online) tags.push('Online');
+            if (row.inPerson) tags.push('In person');
+            const noteHtml = row.note ? `<div style="margin-top:6px; font-size:13px; color:var(--muted);">${escapeHtml(row.note)}</div>` : '';
+            const tagsHtml = tags.length ? `<div style="margin-top:6px; display:flex; flex-wrap:wrap; gap:6px;">${tags.map((tag) => `<span style="display:inline-flex; align-items:center; padding:3px 8px; border-radius:999px; border:1px solid var(--border); font-size:12px; font-weight:700; color:var(--text); background:var(--surface);">${escapeHtml(tag)}</span>`).join('')}</div>` : '';
+            return `
+              <div style="padding:12px 0; border-top:${index === 0 ? 'none' : '1px solid var(--border)'};">
+                <div style="display:flex; justify-content:space-between; gap:12px; align-items:baseline;">
+                  <strong>${escapeHtml(row.day)}</strong>
+                  <span>${escapeHtml(row.time)}</span>
+                </div>
+                ${tagsHtml}
+                ${noteHtml}
+              </div>`;
+          }).join('')}
+          ${state.myHoursNote ? `<div style="margin-top:12px; font-size:13.5px; color:var(--muted);"><em>${escapeHtml(state.myHoursNote)}</em></div>` : ''}
+        </div>
+      </section>` : '';
+
     const hobbyHtml = state.sections.hobby ? `
       <section style="margin-top:22px;">
         <h2 style="margin:0 0 10px 0; font-size:22px; line-height:1.25; color:var(--text);">${escapeHtml(state.hobbyTitle)}</h2>
@@ -805,6 +830,7 @@
         ${helpHtml}
         ${servicesHtml}
         ${hoursHtml}
+        ${myHoursHtml}
         ${hobbyHtml}
         ${customHtml}
         ${petHtml}
