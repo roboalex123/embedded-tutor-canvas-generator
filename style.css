@@ -191,6 +191,58 @@ input:focus, textarea:focus, select:focus, button:focus, a:focus {
 .rowGrid.three { grid-template-columns: 1.2fr 1fr 1fr; }
 .rowGrid .miniLabel { font-size: 12px; color: var(--muted); font-weight: 700; margin-bottom: 4px; display: block; }
 .rowGrid input { min-width: 0; }
+
+.hoursCard {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.hoursCardHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+  align-items: end;
+}
+.hoursCardBody {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.hoursNoteField {
+  grid-column: 1 / -1;
+}
+.hoursActions {
+  justify-content: flex-start;
+}
+.heroImageFrame {
+  flex: 0 1 320px;
+  min-width: 240px;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.heroImageFrame figure {
+  margin: 0;
+  padding: 10px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.18);
+}
+.heroImageFrame img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.18);
+  object-fit: cover;
+}
+.heroImageFrame figcaption {
+  margin-top: 8px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.88);
+}
 .helperStrip {
   display: flex;
   flex-wrap: wrap;
@@ -379,7 +431,7 @@ input:focus, textarea:focus, select:focus, button:focus, a:focus {
 
 @media (max-width: 760px) {
   .siteHeader { flex-direction: column; }
-  .fieldGrid, .rowGrid, .rowGrid.three, .imageGrid, .serviceGrid, .sectionHeaderGrid, .topGrid, .swatchGrid, .sectionToggleGrid, .contactCustomGrid { grid-template-columns: 1fr; }
+  .fieldGrid, .rowGrid, .rowGrid.three, .imageGrid, .serviceGrid, .sectionHeaderGrid, .topGrid, .swatchGrid, .sectionToggleGrid, .contactCustomGrid, .hoursCardHeader, .hoursCardBody { grid-template-columns: 1fr; }
   .previewFrame { min-height: 620px; }
   .outputBox { min-height: 360px; }
   .colorPair { grid-template-columns: 18px 40px 1fr; }

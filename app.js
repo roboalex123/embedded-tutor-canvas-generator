@@ -390,8 +390,8 @@
       </div>`).join('');
 
     const hoursCards = state.hoursRows.map((row, index) => `
-      <div class="rowCard">
-        <div class="rowGrid hoursGrid">
+      <div class="rowCard hoursCard">
+        <div class="hoursCardHeader">
           <label class="field">
             <span class="miniLabel">Day</span>
             <input name="hoursRows[${index}].day" value="${escapeHtml(row.day)}" />
@@ -400,26 +400,28 @@
             <span class="miniLabel">Time</span>
             <input name="hoursRows[${index}].time" value="${escapeHtml(row.time)}" />
           </label>
+        </div>
+        <div class="hoursCardBody">
           <label class="switchItem inlineSwitch">
             <span class="switchLabel"><input type="checkbox" name="hoursRows[${index}].online" ${row.online ? 'checked' : ''} /> <span>Online</span></span>
           </label>
           <label class="switchItem inlineSwitch">
             <span class="switchLabel"><input type="checkbox" name="hoursRows[${index}].inPerson" ${row.inPerson ? 'checked' : ''} /> <span>In person</span></span>
           </label>
-          <label class="field fullField">
+          <label class="field fullField hoursNoteField">
             <span class="miniLabel">Note</span>
             <input name="hoursRows[${index}].note" value="${escapeHtml(row.note)}" placeholder="Optional note" />
           </label>
-          <div class="helperStrip">
-            <button class="ghostBtn" type="button" data-add-hour-below="${index}">Add below</button>
-            <button class="ghostBtn" type="button" data-remove-hour-row="${index}">Remove</button>
-          </div>
+        </div>
+        <div class="helperStrip hoursActions">
+          <button class="ghostBtn" type="button" data-add-hour-below="${index}">Add below</button>
+          <button class="ghostBtn" type="button" data-remove-hour-row="${index}">Remove</button>
         </div>
       </div>`).join('');
 
     const myHoursCards = state.myHoursRows.map((row, index) => `
-      <div class="rowCard">
-        <div class="rowGrid hoursGrid">
+      <div class="rowCard hoursCard">
+        <div class="hoursCardHeader">
           <label class="field">
             <span class="miniLabel">Day</span>
             <input name="myHoursRows[${index}].day" value="${escapeHtml(row.day)}" />
@@ -428,20 +430,22 @@
             <span class="miniLabel">Time</span>
             <input name="myHoursRows[${index}].time" value="${escapeHtml(row.time)}" />
           </label>
+        </div>
+        <div class="hoursCardBody">
           <label class="switchItem inlineSwitch">
             <span class="switchLabel"><input type="checkbox" name="myHoursRows[${index}].online" ${row.online ? 'checked' : ''} /> <span>Online</span></span>
           </label>
           <label class="switchItem inlineSwitch">
             <span class="switchLabel"><input type="checkbox" name="myHoursRows[${index}].inPerson" ${row.inPerson ? 'checked' : ''} /> <span>In person</span></span>
           </label>
-          <label class="field fullField">
+          <label class="field fullField hoursNoteField">
             <span class="miniLabel">Note</span>
             <input name="myHoursRows[${index}].note" value="${escapeHtml(row.note)}" placeholder="Optional note" />
           </label>
-          <div class="helperStrip">
-            <button class="ghostBtn" type="button" data-add-my-hour-below="${index}">Add below</button>
-            <button class="ghostBtn" type="button" data-remove-my-hour-row="${index}">Remove</button>
-          </div>
+        </div>
+        <div class="helperStrip hoursActions">
+          <button class="ghostBtn" type="button" data-add-my-hour-below="${index}">Add below</button>
+          <button class="ghostBtn" type="button" data-remove-my-hour-row="${index}">Remove</button>
         </div>
       </div>`).join('');
 
@@ -663,9 +667,9 @@
 
     const heroHtml = state.sections.hero ? `
       <section style="display:flex; flex-wrap:wrap; gap:18px; align-items:stretch; padding:18px; border-radius:14px; background:linear-gradient(135deg, var(--hero-start) 0%, var(--hero-mid) 52%, var(--hero-end) 100%); border:1px solid var(--hero-start); color:var(--hero-text);">
-        <div style="flex:1; min-width:260px; color:var(--hero-text);">
+        <div style="flex:1; min-width:260px; color:var(--hero-text); display:flex; flex-direction:column; gap:12px;">
           <div style="font-size:12px; letter-spacing:0.12em; text-transform:uppercase; font-weight:700; opacity:0.95;">${escapeHtml(state.eyebrow)} · ${escapeHtml(currentTermLabel())}</div>
-          <div style="font-size:18px; font-weight:700; margin:8px 0 6px;">${escapeHtml(state.introLead)}</div>
+          <div style="font-size:18px; font-weight:700; margin:0;">${escapeHtml(state.introLead)}</div>
           <div style="font-size:14.5px; color:rgba(255,255,255,0.92);">
             <p style="margin:0 0 10px 0;">${escapeHtml(state.introBody)}</p>
             <p style="margin:0 0 10px 0;">${escapeHtml(state.introExtra)}</p>
@@ -673,6 +677,14 @@
           </div>
           ${contactHtml}
         </div>
+        ${state.images.filter((img) => img.src.trim()).length ? `
+          <div style="flex:0 1 320px; min-width:240px; max-width:340px; display:flex; flex-direction:column; gap:10px;">
+            ${state.images.filter((img) => img.src.trim()).slice(0, 1).map((img, index) => `
+              <figure style="margin:0; padding:10px; border-radius:14px; background:rgba(255,255,255,0.10); border:1px solid rgba(255,255,255,0.18);">
+                <img src="${escapeHtml(img.src)}" alt="${escapeHtml(img.alt || img.caption || `Hero image ${index + 1}`)}" style="width:100%; height:auto; display:block; border-radius:12px; border:1px solid rgba(255,255,255,0.18); object-fit:cover;" />
+                ${(img.caption || img.alt) ? `<figcaption style="margin-top:8px; font-size:13px; color:rgba(255,255,255,0.88);">${escapeHtml(img.caption || img.alt)}</figcaption>` : ''}
+              </figure>`).join('')}
+          </div>` : ''}
       </section>` : '';
 
     const quickHtml = state.sections.quickAccess ? `
