@@ -216,9 +216,9 @@ input:focus, textarea:focus, select:focus, button:focus, a:focus {
   justify-content: flex-start;
 }
 .heroImageFrame {
-  flex: 0 1 190px;
-  min-width: 160px;
-  max-width: 220px;
+  flex: 0 1 280px;
+  min-width: 220px;
+  max-width: 300px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -226,22 +226,33 @@ input:focus, textarea:focus, select:focus, button:focus, a:focus {
 .heroImageFrame figure {
   margin: 0;
   padding: 10px;
-  border-radius: 14px;
-  background: rgba(255,255,255,0.10);
-  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 20px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.30);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.16);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 .heroImageFrame img {
   width: 100%;
+  max-height: 240px;
   height: auto;
   display: block;
-  border-radius: 12px;
+  border-radius: 14px;
   border: 1px solid rgba(255,255,255,0.18);
   object-fit: cover;
 }
 .heroImageFrame figcaption {
-  margin-top: 8px;
-  font-size: 13px;
-  color: rgba(255,255,255,0.88);
+  margin: 0;
+  padding: 0 2px;
+  font-size: 12.5px;
+  font-style: italic;
+  line-height: 1.35;
+  color: rgba(255,255,255,0.90);
 }
 .helperStrip {
   display: flex;
