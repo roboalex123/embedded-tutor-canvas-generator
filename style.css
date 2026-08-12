@@ -141,7 +141,6 @@ input:focus, textarea:focus, select:focus, button:focus, a:focus {
   outline-offset: 2px;
   border-color: var(--accent);
 }
-.inlineTwo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .rowCard {
   border: 1px solid #e2e8f0;
   border-radius: 14px;
@@ -184,6 +183,50 @@ input:focus, textarea:focus, select:focus, button:focus, a:focus {
   color: #0f172a;
 }
 
+.switchItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-alt);
+}
+.switchLabel {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.switchLabel input { width: auto; }
+.inlineSwitch { min-height: 0; }
+.sectionToggleGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.disabled {
+  opacity: 0.72;
+}
+.imageGrid {
+  grid-template-columns: 1.25fr 1fr 1fr 1fr;
+}
+.serviceGrid {
+  grid-template-columns: 1.15fr 1fr 1fr;
+}
+.sectionHeaderGrid {
+  grid-template-columns: 1.2fr 1fr 1fr;
+}
+.hourRow {
+  margin-top: 10px;
+}
+.topGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.swatchGrid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.filePicker input { padding: 8px 12px; }
+
 @media (max-width: 1080px) {
   .siteHeader, .appShell { width: min(100% - 24px, 1260px); }
   .layout { grid-template-columns: 1fr; }
@@ -191,7 +234,7 @@ input:focus, textarea:focus, select:focus, button:focus, a:focus {
 
 @media (max-width: 760px) {
   .siteHeader { flex-direction: column; }
-  .fieldGrid, .inlineTwo, .rowGrid, .rowGrid.three { grid-template-columns: 1fr; }
+  .fieldGrid, .rowGrid, .rowGrid.three, .imageGrid, .serviceGrid, .sectionHeaderGrid, .topGrid, .swatchGrid, .sectionToggleGrid { grid-template-columns: 1fr; }
   .previewFrame { min-height: 620px; }
   .outputBox { min-height: 360px; }
 }

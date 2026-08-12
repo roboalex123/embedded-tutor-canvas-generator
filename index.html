@@ -19,6 +19,7 @@
       <span class="pill">Accessible defaults</span>
       <span class="pill">Editable hours</span>
       <span class="pill">Copy HTML</span>
+      <span class="pill">Local download</span>
     </div>
   </header>
 
@@ -26,9 +27,10 @@
     <section class="card introCard">
       <h2>How it works</h2>
       <ol class="steps">
-        <li>Adjust the tutor details, contact info, and hours.</li>
+        <li>Adjust the tutor details, contact info, colors, images, and hours.</li>
+        <li>Turn sections on or off so the page stays focused.</li>
         <li>Check the live preview for spacing and contrast.</li>
-        <li>Copy the generated HTML and paste it into the Canvas HTML editor.</li>
+        <li>Copy the Canvas HTML or download a full local page.</li>
         <li>Save in Canvas, then publish when it looks right.</li>
       </ol>
     </section>
@@ -52,11 +54,11 @@
             <h2 id="preview-title">Live Canvas look</h2>
           </div>
           <div class="buttonRow">
-            <button class="ghostBtn" type="button" data-action="copy-html">Copy HTML</button>
+            <button class="ghostBtn" type="button" data-action="copy-html">Copy Canvas HTML</button>
             <a class="ghostBtn linkBtn" href="#instructions">Canvas steps</a>
           </div>
         </div>
-        <p class="hint">This preview is the generated page, not a mockup.</p>
+        <p class="hint">The preview uses the full local page so you can see what the download gives you.</p>
         <iframe class="previewFrame" title="Generated Canvas preview" data-preview></iframe>
       </section>
     </div>
@@ -68,7 +70,7 @@
           <h2 id="output-title">Copyable HTML</h2>
         </div>
         <div class="buttonRow">
-          <button class="ghostBtn" type="button" data-action="download-html">Download .html</button>
+          <button class="ghostBtn" type="button" data-action="download-html">Download full HTML</button>
           <button class="ghostBtn" type="button" data-action="copy-html-secondary">Copy again</button>
         </div>
       </div>
@@ -92,14 +94,6 @@
       </ol>
     </section>
   </main>
-
-  <template id="field-group-template">
-    <section class="fieldGroup card">
-      <h3></h3>
-      <p class="groupNote"></p>
-      <div class="fieldGrid"></div>
-    </section>
-  </template>
 
   <script src="./app.js" defer></script>
 </body>

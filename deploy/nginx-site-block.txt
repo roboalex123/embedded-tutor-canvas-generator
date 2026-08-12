@@ -1,0 +1,30 @@
+Add this to the `server.voss.industries` TLS server block in `/etc/nginx/sites-available/server.voss.industries`:
+
+```nginx
+location = /tc/embedded-generator {
+    return 301 /tc/embedded-generator/;
+}
+
+location ^~ /tc/embedded-generator/ {
+    proxy_pass http://127.0.0.1:8024/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_redirect off;
+}
+```
+
+Then run:
+
+```bash
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+Checks:
+- `https://varis.voss.industries/tc/embedded-generator/` should return 200
+- `https://varis.voss.industries/varis/` should still work
+- `systemctl --user status embedded-tutor-canvas-generator.service` should stay active
