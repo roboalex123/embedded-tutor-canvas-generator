@@ -41,6 +41,7 @@
     { key: 'help', label: 'How I can help', note: 'Bullets and course note' },
     { key: 'services', label: 'Services / resources', note: 'Tutorial Center cards' },
     { key: 'hours', label: 'Hours', note: 'One section with per-row online / in-person toggles' },
+    { key: 'myHours', label: 'My hours', note: 'A separate personal schedule section if you want it' },
     { key: 'hobby', label: 'Hobby section', note: 'Optional personal interests' },
     { key: 'custom', label: 'Custom section', note: 'One extra freeform block' },
     { key: 'pet', label: 'Pet / mascot', note: 'Optional personality block' },
@@ -77,6 +78,7 @@
       help: true,
       services: true,
       hours: true,
+      myHours: true,
       hobby: false,
       custom: false,
       pet: false,
@@ -96,9 +98,7 @@
       discord: { enabled: true, value: 'vossrobert in your class Discord server' },
       canvas: { enabled: true, value: 'Message me through Canvas Messages' },
     },
-    customContactMethods: [
-      { enabled: false, label: 'Slack', badge: 'SL', value: '', link: '' },
-    ],
+    customContactMethods: [],
     zoomUrl: 'https://cccconfer.zoom.us/j/5593255248',
     zoomId: '559 325 5248',
     inPersonLocation: 'AC1-137, next to the computer lab',
@@ -132,6 +132,12 @@
       { day: 'Thursday', time: '9:00am – 9:00pm', online: true, inPerson: true, note: '' },
       { day: 'Friday', time: '9:00am – 5:00pm', online: true, inPerson: true, note: '' },
       { day: 'Sunday', time: '2:00pm – 8:00pm', online: true, inPerson: false, note: 'Online only' },
+    ],
+    myHoursTitle: 'My hours',
+    myHoursNote: 'Optional personal schedule or tutor-specific availability.',
+    myHoursRows: [
+      { day: 'Monday', time: 'Before 9:00am', online: false, inPerson: false, note: 'Planning / prep' },
+      { day: 'Tuesday', time: 'After 5:00pm', online: false, inPerson: false, note: 'If available' },
     ],
     hobbyTitle: 'A little about me',
     hobbyBlurb: 'Optional. Keep it human, not performative.',
@@ -226,20 +232,17 @@
         images: Array.isArray(parsed.images)
           ? parsed.images.slice(0, 4).map((img) => ({ src: String(img?.src ?? ''), alt: String(img?.alt ?? ''), caption: String(img?.caption ?? '') }))
           : clone(defaults.images),
-        helpItems: Array.isArray(parsed.helpItems) ? parsed.helpItems.slice(0, 8).map((item) => String(item ?? '')) : clone(defaults.helpItems),
-        visitCards: Array.isArray(parsed.visitCards)
-          ? parsed.visitCards.slice(0, 4).map((item, idx) => ({ title: String(item?.title ?? defaults.visitCards[idx].title), body: String(item?.body ?? defaults.visitCards[idx].body) }))
-          : clone(defaults.visitCards),
-        hoursRows: Array.isArray(parsed.hoursRows)
-          ? parsed.hoursRows.slice(0, 8).map((row) => ({
+        myHoursTitle: String(parsed.myHoursTitle ?? defaults.myHoursTitle),
+        myHoursNote: String(parsed.myHoursNote ?? defaults.myHoursNote),
+        myHoursRows: Array.isArray(parsed.myHoursRows)
+          ? parsed.myHoursRows.slice(0, 8).map((row) => ({
               day: String(row?.day ?? ''),
               time: String(row?.time ?? ''),
               online: Boolean(row?.online),
               inPerson: Boolean(row?.inPerson),
               note: String(row?.note ?? ''),
             }))
-          : clone(defaults.hoursRows),
-        hobbyItems: Array.isArray(parsed.hobbyItems) ? parsed.hobbyItems.slice(0, 8).map((item) => String(item ?? '')) : clone(defaults.hobbyItems),
+          : clone(defaults.myHoursRows),
         customItems: Array.isArray(parsed.customItems) ? parsed.customItems.slice(0, 8).map((item) => String(item ?? '')) : clone(defaults.customItems),
       };
     } catch {
@@ -301,7 +304,7 @@
       const item = state.contactMethods[def.key];
       return `
         <div class="rowCard contactMethodCard">
-          <div class="sectionHead methodHead">
+          <div class="contactMethodTop">
             <div class="methodTitle">
               <span class="iconBadge" aria-hidden="true">${escapeHtml(def.badge)}</span>
               <div>
@@ -311,17 +314,19 @@
             </div>
             ${checkboxField('Include', `contactMethods.${def.key}.enabled`, Boolean(item.enabled))}
           </div>
-          <label class="field full">
-            <span class="labelText">${escapeHtml(def.label)} value</span>
-            <input type="text" name="contactMethods.${def.key}.value" value="${escapeHtml(item.value)}" />
-          </label>
+          <div class="fieldStack">
+            <label class="field full">
+              <span class="labelText">${escapeHtml(def.label)} value</span>
+              <input type="text" name="contactMethods.${def.key}.value" value="${escapeHtml(item.value)}" />
+            </label>
+          </div>
         </div>`;
 
     }).join('');
 
     const customContactCards = state.customContactMethods.map((item, index) => `
       <div class="rowCard contactMethodCard">
-        <div class="sectionHead methodHead">
+        <div class="contactMethodTop">
           <div class="methodTitle">
             <span class="iconBadge" aria-hidden="true">${escapeHtml(item.badge || 'CU')}</span>
             <div>
@@ -408,6 +413,34 @@
           <div class="helperStrip">
             <button class="ghostBtn" type="button" data-add-hour-below="${index}">Add below</button>
             <button class="ghostBtn" type="button" data-remove-hour-row="${index}">Remove</button>
+          </div>
+        </div>
+      </div>`).join('');
+
+    const myHoursCards = state.myHoursRows.map((row, index) => `
+      <div class="rowCard">
+        <div class="rowGrid hoursGrid">
+          <label class="field">
+            <span class="miniLabel">Day</span>
+            <input name="myHoursRows[${index}].day" value="${escapeHtml(row.day)}" />
+          </label>
+          <label class="field">
+            <span class="miniLabel">Time</span>
+            <input name="myHoursRows[${index}].time" value="${escapeHtml(row.time)}" />
+          </label>
+          <label class="switchItem inlineSwitch">
+            <span class="switchLabel"><input type="checkbox" name="myHoursRows[${index}].online" ${row.online ? 'checked' : ''} /> <span>Online</span></span>
+          </label>
+          <label class="switchItem inlineSwitch">
+            <span class="switchLabel"><input type="checkbox" name="myHoursRows[${index}].inPerson" ${row.inPerson ? 'checked' : ''} /> <span>In person</span></span>
+          </label>
+          <label class="field fullField">
+            <span class="miniLabel">Note</span>
+            <input name="myHoursRows[${index}].note" value="${escapeHtml(row.note)}" placeholder="Optional note" />
+          </label>
+          <div class="helperStrip">
+            <button class="ghostBtn" type="button" data-add-my-hour-below="${index}">Add below</button>
+            <button class="ghostBtn" type="button" data-remove-my-hour-row="${index}">Remove</button>
           </div>
         </div>
       </div>`).join('');
@@ -562,6 +595,14 @@
           <div class="fieldGrid">${hoursCards}</div>
           <div class="helperStrip" style="margin-top: 12px;"><button class="ghostBtn" type="button" data-add-hour-row>Add hour row</button></div>`)}
 
+        ${sectionShell('myHours', 'My hours', 'Your personal availability or tutor-specific schedule.', `
+          <div class="fieldGrid">
+            ${textField('Section title', 'myHoursTitle', state.myHoursTitle)}
+            ${textField('Note', 'myHoursNote', state.myHoursNote, 'text', true)}
+          </div>
+          <div class="fieldGrid">${myHoursCards}</div>
+          <div class="helperStrip" style="margin-top: 12px;"><button class="ghostBtn" type="button" data-add-my-hour-row>Add my-hours row</button></div>`)}
+
         ${sectionShell('hobby', 'Hobby section', 'Optional. Keep it small and human.', hobbySection)}
 
         ${sectionShell('custom', 'Custom section', 'One extra block for whatever does not fit elsewhere.', customSection)}
@@ -573,27 +614,33 @@
   };
 
   const buildContactOutput = () => {
+    const iconStyle = 'width:34px;height:34px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;background:rgba(255,255,255,0.18);color:var(--hero-text);flex:0 0 auto;';
+    const badgeStyle = 'display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.10);color:var(--hero-text);text-decoration:none;min-height:60px;';
+    const labelStyle = 'display:flex;flex-direction:column;gap:2px;min-width:0;';
+    const valueStyle = 'opacity:0.92;font-size:13px;word-break:break-word;';
+    const titleStyle = 'font-size:14px;';
+    const makeBadge = (badge, label, value, href = '') => {
+      const icon = `<span aria-hidden="true" style="${iconStyle}">${escapeHtml(badge)}</span>`;
+      const text = `<span style="${labelStyle}"><strong style="${titleStyle}">${escapeHtml(label)}</strong><span style="${valueStyle}">${escapeHtml(value)}</span></span>`;
+      const body = `${icon}${text}`;
+      return href ? `<a href="${escapeHtml(href)}" style="${badgeStyle}">${body}</a>` : `<div style="${badgeStyle}">${body}</div>`;
+    };
+
     const defaultHtml = defaultContactMethods.map((def) => {
       const item = state.contactMethods[def.key];
       const enabled = Boolean(item?.enabled);
       const value = String(item?.value || '');
-      const badge = escapeHtml(def.badge);
-      const label = escapeHtml(def.label);
-      const icon = `<span class="iconBadge" aria-hidden="true">${badge}</span>`;
-      const text = `<span class="contactLabel"><strong>${label}</strong><span>${escapeHtml(value)}</span></span>`;
-      if (!enabled || !value) return `<div class="contactBadge">${icon}${text}</div>`;
+      if (!enabled || !value) return makeBadge(def.badge, def.label, value, '');
       const href = def.key === 'email' ? `mailto:${value}` : value ? `${def.hrefPrefix || ''}${value}` : '';
-      return href ? `<a class="contactBadge" href="${escapeHtml(href)}">${icon}${text}</a>` : `<div class="contactBadge">${icon}${text}</div>`;
+      return makeBadge(def.badge, def.label, value, href);
     }).join('');
 
     const customHtml = state.customContactMethods.filter((item) => item.enabled && (item.label || item.value)).map((item) => {
-      const badge = escapeHtml(item.badge || 'CU');
-      const label = escapeHtml(item.label || 'Custom method');
-      const value = escapeHtml(item.value || '');
-      const icon = `<span class="iconBadge" aria-hidden="true">${badge}</span>`;
-      const text = `<span class="contactLabel"><strong>${label}</strong><span>${value}</span></span>`;
+      const badge = String(item.badge || 'CU');
+      const label = String(item.label || 'Custom method');
+      const value = String(item.value || '');
       const link = String(item.link || '').trim();
-      return link ? `<a class="contactBadge" href="${escapeHtml(link)}">${icon}${text}</a>` : `<div class="contactBadge">${icon}${text}</div>`;
+      return makeBadge(badge, label, value, link);
     }).join('');
 
     return `${defaultHtml}${customHtml}`;
@@ -888,6 +935,19 @@ ${buildFragment()}
       return;
     }
 
+    const myHoursMatch = name.match(/^myHoursRows\[(\d+)\]\.(day|time|note)$/);
+    if (myHoursMatch) {
+      const index = Number(myHoursMatch[1]);
+      state.myHoursRows[index][myHoursMatch[2]] = value;
+      return;
+    }
+    const myHoursToggleMatch = name.match(/^myHoursRows\[(\d+)\]\.(online|inPerson)$/);
+    if (myHoursToggleMatch) {
+      const index = Number(myHoursToggleMatch[1]);
+      state.myHoursRows[index][myHoursToggleMatch[2]] = checked;
+      return;
+    }
+
     const hobbyMatch = name.match(/^hobbyItems\[(\d+)\]$/);
     if (hobbyMatch) {
       state.hobbyItems[Number(hobbyMatch[1])] = value;
@@ -1019,6 +1079,21 @@ ${buildFragment()}
       }],
       ['[data-add-hour-row]', () => {
         state.hoursRows = [...state.hoursRows, { day: 'New day', time: 'New time', online: true, inPerson: false, note: '' }];
+        rerender();
+      }],
+      ['[data-add-my-hour-row]', () => {
+        state.myHoursRows = [...state.myHoursRows, { day: 'New day', time: 'New time', online: false, inPerson: false, note: '' }];
+        rerender();
+      }],
+      ['[data-add-my-hour-below]', (event) => {
+        const index = Number(event.currentTarget.dataset.addMyHourBelow);
+        state.myHoursRows.splice(index + 1, 0, { day: 'New day', time: 'New time', online: false, inPerson: false, note: '' });
+        rerender();
+      }],
+      ['[data-remove-my-hour-row]', (event) => {
+        const index = Number(event.currentTarget.dataset.removeMyHourRow);
+        if (state.myHoursRows.length <= 1) return;
+        state.myHoursRows.splice(index, 1);
         rerender();
       }],
       ['[data-add-hour-below]', (event) => {
