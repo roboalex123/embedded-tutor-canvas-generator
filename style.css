@@ -126,6 +126,7 @@ h1 {
 .field { display: flex; flex-direction: column; gap: 6px; }
 .field.full { grid-column: 1 / -1; }
 .labelText { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; }
+.tipWrap { position: relative; display: inline-flex; align-items: center; }
 .infoTip {
   width: 18px;
   height: 18px;
@@ -136,6 +137,34 @@ h1 {
   font-size: 11px;
   line-height: 1;
   padding: 0;
+}
+.tipBubble {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%);
+  min-width: 180px;
+  max-width: 260px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  color: var(--text);
+  font-size: 12px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.tipWrap:hover .tipBubble,
+.tipWrap:focus-within .tipBubble {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-2px);
+}
+.fieldTip {
+  font-size: 12px;
+  color: var(--muted);
 }
 input, textarea, select {
   width: 100%;
@@ -288,6 +317,23 @@ input:focus, textarea:focus, select:focus, button:focus, a:focus {
   border: 1px dashed var(--border);
 }
 .filePicker input { padding: 8px 12px; }
+.themeChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-alt);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+.themeChip select {
+  width: auto;
+  padding: 6px 10px;
+  border-radius: 999px;
+}
 
 [data-theme="dark"] {
   --bg: #0b1220;
@@ -319,8 +365,11 @@ input:focus, textarea:focus, select:focus, button:focus, a:focus {
 [data-theme="dark"] .notice { background: #122138; border-color: #244369; color: var(--text); }
 [data-theme="dark"] .iconBadge { background: #1f2a44; color: #e5eefb; }
 [data-theme="dark"] .infoTip { background: #16233e; color: var(--accent); }
+[data-theme="dark"] .tipBubble { background: #111b31; color: var(--text); }
+[data-theme="dark"] .fieldTip { color: #b8c6e4; }
 [data-theme="dark"] .contactBadge { background: rgba(15, 23, 42, 0.65); border-color: rgba(255,255,255,0.16); }
 [data-theme="dark"] .contactBadge:hover { border-color: rgba(255,255,255,0.30); }
+[data-theme="dark"] .themeChip { background: #17233c; }
 [data-theme="dark"] .previewFrame { background: #0b1220; }
 
 @media (max-width: 1080px) {

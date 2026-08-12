@@ -253,11 +253,12 @@
     statusEl.textContent = message;
   };
 
-  const tipBadge = (tip) => tip ? `<button type="button" class="infoTip" title="${escapeHtml(tip)}" aria-label="${escapeHtml(tip)}">i</button>` : '';
+  const tipMarkup = (tip) => tip ? `<span class="tipWrap"><button type="button" class="infoTip" title="${escapeHtml(tip)}" aria-label="${escapeHtml(tip)}">i</button><span class="tipBubble">${escapeHtml(tip)}</span></span>` : '';
 
   const textField = (label, name, value, type = 'text', full = false, tip = '') => `
     <label class="field ${full ? 'full' : ''}">
-      <span class="labelText">${escapeHtml(label)}${tipBadge(tip)}</span>
+      <span class="labelText">${escapeHtml(label)}${tipMarkup(tip)}</span>
+      ${tip ? `<span class="fieldTip">${escapeHtml(tip)}</span>` : ''}
       ${type === 'textarea'
         ? `<textarea name="${escapeHtml(name)}">${escapeHtml(value)}</textarea>`
         : `<input type="${escapeHtml(type)}" name="${escapeHtml(name)}" value="${escapeHtml(value)}" />`}
@@ -265,7 +266,8 @@
 
   const colorField = (label, name, value, tip = '') => `
     <label class="field colorField">
-      <span class="labelText">${escapeHtml(label)}${tipBadge(tip)}</span>
+      <span class="labelText">${escapeHtml(label)}${tipMarkup(tip)}</span>
+      ${tip ? `<span class="fieldTip">${escapeHtml(tip)}</span>` : ''}
       <span class="colorPair">
         <span class="colorPreview" style="background:${escapeHtml(value)}"></span>
         <input type="color" name="${escapeHtml(name)}__color" value="${escapeHtml(value)}" aria-label="${escapeHtml(label)} color picker" />
@@ -286,8 +288,8 @@
     <section class="fieldGroup card ${state.sections[key] ? '' : 'disabled'}">
       <div class="sectionHead sectionLocalHead">
         <div>
-          <h3>${escapeHtml(title)}${tipBadge(note)}</h3>
-          <p class="groupNote">${escapeHtml(note)}</p>
+          <h3>${escapeHtml(title)}</h3>
+          ${note ? `<p class="groupNote">${escapeHtml(note)}</p>` : ''}
         </div>
         ${checkboxField('Show section', `sections.${key}`, Boolean(state.sections[key]))}
       </div>
@@ -460,8 +462,15 @@
           <div class="sectionHead sectionLocalHead">
             <div>
               <h3>Site setup</h3>
-              <p class="groupNote">Choose the term and build the palette.</p>
+              <p class="groupNote">Choose the term, set the editor theme, and build the palette.</p>
             </div>
+            <label class="themeChip">
+              <span>Editor</span>
+              <select name="editorTheme" aria-label="Editor theme">
+                <option value="dark" ${state.editorTheme === 'dark' ? 'selected' : ''}>Dark</option>
+                <option value="light" ${state.editorTheme === 'light' ? 'selected' : ''}>Light</option>
+              </select>
+            </label>
           </div>
           <div class="fieldGrid topGrid">
             <label class="field">
@@ -792,6 +801,11 @@ ${buildFragment()}
   };
 
   const applyInput = (name, value, checked = false) => {
+    if (name === 'editorTheme') {
+      state.editorTheme = value;
+      document.documentElement.setAttribute('data-theme', value === 'dark' ? 'dark' : 'light');
+      return;
+    }
     if (name === 'term' || name === 'palettePreset') {
       state[name] = value;
       if (name === 'palettePreset' && value !== 'custom') {
@@ -1044,6 +1058,7 @@ ${buildFragment()}
   };
 
   const renderApp = () => {
+    document.documentElement.setAttribute('data-theme', state.editorTheme === 'dark' ? 'dark' : 'light');
     renderEditor();
     bindForm();
     renderPreview();
