@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Embedded Tutor Canvas Generator</title>
+  <meta name="description" content="Generate a clean, accessible Canvas page for embedded tutors with editable defaults and copyable HTML." />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <a class="skipLink" href="#app">Skip to content</a>
+  <header class="siteHeader">
+    <div>
+      <p class="eyebrow">Tutorial Center tool</p>
+      <h1>Embedded Tutor Canvas Generator</h1>
+      <p class="lede">Edit the defaults, preview the page, copy the HTML, and paste it into Canvas. No backend. No nonsense.</p>
+    </div>
+    <div class="headerPills" aria-label="Page features">
+      <span class="pill">Accessible defaults</span>
+      <span class="pill">Editable hours</span>
+      <span class="pill">Copy HTML</span>
+    </div>
+  </header>
+
+  <main id="app" class="appShell">
+    <section class="card introCard">
+      <h2>How it works</h2>
+      <ol class="steps">
+        <li>Adjust the tutor details, contact info, and hours.</li>
+        <li>Check the live preview for spacing and contrast.</li>
+        <li>Copy the generated HTML and paste it into the Canvas HTML editor.</li>
+        <li>Save in Canvas, then publish when it looks right.</li>
+      </ol>
+    </section>
+
+    <div class="layout">
+      <section class="panel card" aria-labelledby="editor-title">
+        <div class="sectionHead">
+          <div>
+            <p class="eyebrow">Customize</p>
+            <h2 id="editor-title">Page settings</h2>
+          </div>
+          <button class="ghostBtn" type="button" data-action="reset">Reset defaults</button>
+        </div>
+        <div id="editor"></div>
+      </section>
+
+      <section class="panel card" aria-labelledby="preview-title">
+        <div class="sectionHead">
+          <div>
+            <p class="eyebrow">Preview</p>
+            <h2 id="preview-title">Live Canvas look</h2>
+          </div>
+          <div class="buttonRow">
+            <button class="ghostBtn" type="button" data-action="copy-html">Copy HTML</button>
+            <a class="ghostBtn linkBtn" href="#instructions">Canvas steps</a>
+          </div>
+        </div>
+        <p class="hint">This preview is the generated page, not a mockup.</p>
+        <iframe class="previewFrame" title="Generated Canvas preview" data-preview></iframe>
+      </section>
+    </div>
+
+    <section class="card outputCard" aria-labelledby="output-title">
+      <div class="sectionHead">
+        <div>
+          <p class="eyebrow">Export</p>
+          <h2 id="output-title">Copyable HTML</h2>
+        </div>
+        <div class="buttonRow">
+          <button class="ghostBtn" type="button" data-action="download-html">Download .html</button>
+          <button class="ghostBtn" type="button" data-action="copy-html-secondary">Copy again</button>
+        </div>
+      </div>
+      <textarea class="outputBox" readonly spellcheck="false" aria-label="Generated HTML output" data-output></textarea>
+      <p class="status" role="status" aria-live="polite" data-status>Loaded. Edit anything and the preview updates automatically.</p>
+    </section>
+
+    <section id="instructions" class="card guideCard" aria-labelledby="guide-title">
+      <div class="sectionHead">
+        <div>
+          <p class="eyebrow">Canvas</p>
+          <h2 id="guide-title">How to put it into Canvas</h2>
+        </div>
+      </div>
+      <ol class="steps compact">
+        <li>Open the Canvas page you want to edit.</li>
+        <li>Switch to the HTML editor mode.</li>
+        <li>Paste the generated HTML into the page body.</li>
+        <li>Save, then check the published page.</li>
+        <li>If Canvas strips anything, regenerate and keep the page simple.</li>
+      </ol>
+    </section>
+  </main>
+
+  <template id="field-group-template">
+    <section class="fieldGroup card">
+      <h3></h3>
+      <p class="groupNote"></p>
+      <div class="fieldGrid"></div>
+    </section>
+  </template>
+
+  <script src="./app.js" defer></script>
+</body>
+</html>
