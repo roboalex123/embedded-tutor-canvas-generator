@@ -395,6 +395,9 @@ input:focus, textarea:focus, select:focus, button:focus, a:focus {
 .compactFieldGrid {
   gap: 10px;
 }
+.compactTextField input {
+  min-height: 42px;
+}
 .compactActions .ghostBtn,
 .miniToggle {
   min-height: 34px;

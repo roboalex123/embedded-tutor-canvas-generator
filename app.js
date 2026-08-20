@@ -59,9 +59,9 @@
     siteSetup: true,
     hero: true,
     contact: true,
-    quickAccess: true,
+    quickAccess: false,
     images: false,
-    help: true,
+    help: false,
     services: false,
     hours: true,
     myHours: false,
@@ -96,9 +96,9 @@
     sections: {
       hero: true,
       contact: true,
-      quickAccess: true,
+      quickAccess: false,
       images: true,
-      help: true,
+      help: false,
       services: true,
       hours: true,
       myHours: true,
@@ -519,14 +519,14 @@
             <span class="miniLabel">Upload image</span>
             <input type="file" accept="image/*" data-image-file="${index}" />
           </label>
-          <div class="helperStrip"><button class="ghostBtn" type="button" data-remove-image="${index}">Remove</button></div>
+          <div class="helperStrip"><button class="ghostBtn" type="button" data-remove-image="${index}">Remove image</button></div>
         </div>
       </div>`).join('');
 
     const helpItems = state.helpItems.map((item, index) => `
-      <label class="field full">
-        <span class="labelText">Help item ${index + 1}</span>
-        <textarea name="helpItems[${index}]">${escapeHtml(item)}</textarea>
+      <label class="field full compactTextField">
+        <span class="miniLabel">Help item ${index + 1}</span>
+        <input name="helpItems[${index}]" value="${escapeHtml(item)}" />
       </label>`).join('');
 
     const serviceCards = state.visitCards.map((card, index) => `
@@ -540,7 +540,7 @@
             <span class="miniLabel">Card text</span>
             <input name="visitCards[${index}].body" value="${escapeHtml(card.body)}" />
           </label>
-          <div class="helperStrip"><button class="ghostBtn" type="button" data-remove-visit-card="${index}">Remove</button></div>
+          <div class="helperStrip"><button class="ghostBtn" type="button" data-remove-visit-card="${index}">Remove card</button></div>
         </div>
       </div>`).join('');
 
@@ -550,7 +550,7 @@
           <span class="rowPill">Row ${index + 1}</span>
           <div class="helperStrip hoursActions compactActions">
             <button class="ghostBtn" type="button" data-add-hour-below="${index}">Add below</button>
-            <button class="ghostBtn" type="button" data-remove-hour-row="${index}">Remove</button>
+            <button class="ghostBtn" type="button" data-remove-hour-row="${index}">Remove row</button>
           </div>
         </div>
         <div class="hoursCardHeader compactFieldGrid">
@@ -585,7 +585,7 @@
           <span class="rowPill">Row ${index + 1}</span>
           <div class="helperStrip hoursActions compactActions">
             <button class="ghostBtn" type="button" data-add-my-hour-below="${index}">Add below</button>
-            <button class="ghostBtn" type="button" data-remove-my-hour-row="${index}">Remove</button>
+            <button class="ghostBtn" type="button" data-remove-my-hour-row="${index}">Remove row</button>
           </div>
         </div>
         <div class="hoursCardHeader compactFieldGrid">
@@ -768,7 +768,7 @@
 
         ${sectionShell('services', 'What to expect at the Tutorial Center', 'Small service cards that skim well.', `
           <div class="fieldGrid">${serviceCards}</div>
-          <div class="helperStrip" style="margin-top: 12px;"><button class="ghostBtn" type="button" data-add-visit-card>Add card</button></div>
+          <div class="helperStrip" style="margin-top: 12px;"><button class="ghostBtn" type="button" data-add-visit-card>Add service card</button></div>
           <div class="fieldGrid" style="margin-top: 12px;">
             ${textField('Resources note', 'resourcesNote', state.resourcesNote, 'textarea', true)}
             ${textField('Resources tip', 'resourcesTip', state.resourcesTip, 'text', true)}
@@ -1100,7 +1100,11 @@ ${buildFragment()}
     }
 
     if (name.startsWith('sections.')) {
-      state.sections[name.split('.')[1]] = checked;
+      const key = name.split('.')[1];
+      state.sections[key] = checked;
+      if (checked && Object.prototype.hasOwnProperty.call(state.editorPanels, key)) {
+        state.editorPanels[key] = true;
+      }
       return;
     }
 
