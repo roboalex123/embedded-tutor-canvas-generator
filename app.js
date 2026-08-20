@@ -270,8 +270,15 @@
   };
 
   const saveState = () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(serializeState()));
-    setSaveMeta(`Local draft saved at ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.`);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(serializeState()));
+      setSaveMeta(`Local draft saved at ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.`);
+      return true;
+    } catch {
+      setStatus('Could not save the local draft. The browser storage limit may have been hit.');
+      setSaveMeta('Local draft save failed. Export the draft state file so nothing gets lost.');
+      return false;
+    }
   };
 
   const loadState = () => {
@@ -305,13 +312,13 @@
       window.clearTimeout(saveTimer);
       saveTimer = null;
     }
-    saveState();
+    return saveState();
   };
 
-  const refreshUi = ({ rerenderEditor = false } = {}) => {
+  const refreshUi = ({ rerenderEditor = false, persist = true } = {}) => {
     if (rerenderEditor) renderEditor();
     renderPreview();
-    queueSave();
+    if (persist) queueSave();
   };
 
   const buildExportPayload = () => ({
@@ -321,12 +328,17 @@
     state: serializeState(),
   });
 
+  const isPlainObject = (value) => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+
   const importStatePayload = (payload) => {
-    const candidate = payload && payload.kind === STATE_EXPORT_KIND && payload.state ? payload.state : payload;
-    state = hydrateState(candidate || {});
+    if (!payload || payload.kind !== STATE_EXPORT_KIND || payload.version !== STATE_EXPORT_VERSION || !isPlainObject(payload.state)) {
+      throw new Error('invalid-state-export');
+    }
+    state = hydrateState(payload.state);
     renderApp();
-    flushSave();
-    setSaveMeta('Imported draft loaded and saved locally.');
+    const saved = flushSave();
+    if (saved) setSaveMeta('Imported draft loaded and saved locally.');
+    return saved;
   };
 
   const tipMarkup = (tip) => tip ? `<span class="tipWrap"><button type="button" class="infoTip" title="${escapeHtml(tip)}" aria-label="${escapeHtml(tip)}">i</button><span class="tipBubble">${escapeHtml(tip)}</span></span>` : '';
@@ -954,7 +966,6 @@ ${buildFragment()}
   const renderPreview = () => {
     outputEl.value = resolveThemeVars(buildFragment(), currentTheme());
     previewEl.srcdoc = resolveThemeVars(buildStandaloneHtml(), currentTheme());
-    saveState();
   };
 
   const setColorPair = (form, baseName, value) => {
@@ -1213,11 +1224,12 @@ ${buildFragment()}
     });
   };
 
-  const renderApp = () => {
+  const renderApp = ({ persist = false } = {}) => {
     document.documentElement.setAttribute('data-theme', state.editorTheme === 'dark' ? 'dark' : 'light');
     renderEditor();
     bindForm();
     renderPreview();
+    if (persist) queueSave();
   };
 
   const exportState = () => {
@@ -1269,9 +1281,11 @@ ${buildFragment()}
     localStorage.removeItem(STORAGE_KEY);
     LEGACY_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
     renderApp();
-    flushSave();
-    setStatus('Reset to defaults.');
-    setSaveMeta('Local draft reset.');
+    const saved = flushSave();
+    if (saved) {
+      setStatus('Reset to defaults.');
+      setSaveMeta('Local draft reset.');
+    }
   };
 
   importStateInput?.addEventListener('change', async (event) => {
@@ -1281,8 +1295,8 @@ ${buildFragment()}
     if (!file) return;
     try {
       const text = await file.text();
-      importStatePayload(JSON.parse(text));
-      setStatus(`Imported state from ${file.name}.`);
+      const saved = importStatePayload(JSON.parse(text));
+      if (saved) setStatus(`Imported state from ${file.name}.`);
     } catch {
       setStatus('That file was not a valid generator state export.');
     } finally {
@@ -1294,7 +1308,7 @@ ${buildFragment()}
     if (event.key !== STORAGE_KEY) return;
     try {
       state = event.newValue ? hydrateState(JSON.parse(event.newValue)) : defaultState();
-      renderApp();
+      renderApp({ persist: false });
       setStatus('Loaded the latest local draft from another tab.');
       setSaveMeta('Synced from another open tab.');
     } catch {
