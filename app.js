@@ -452,7 +452,7 @@
     const defaultContactCards = defaultContactMethods.map((def) => {
       const item = state.contactMethods[def.key];
       return `
-        <div class="rowCard contactMethodCard">
+        <div class="rowCard contactMethodCard compactCard">
           <div class="contactMethodTop">
             <div class="methodTitle">
               <span class="iconBadge" aria-hidden="true">${escapeHtml(def.badge)}</span>
@@ -461,11 +461,14 @@
                 <div class="muted small">Default method</div>
               </div>
             </div>
-            ${checkboxField('Include', `contactMethods.${def.key}.enabled`, Boolean(item.enabled))}
+            <label class="miniToggle">
+              <input type="checkbox" name="contactMethods.${def.key}.enabled" ${item.enabled ? 'checked' : ''} />
+              <span>Include</span>
+            </label>
           </div>
-          <div class="fieldStack">
+          <div class="fieldStack compactFieldStack">
             <label class="field full">
-              <span class="labelText">${escapeHtml(def.label)} value</span>
+              <span class="miniLabel">${escapeHtml(def.label)} value</span>
               <input type="text" name="contactMethods.${def.key}.value" value="${escapeHtml(item.value)}" />
             </label>
           </div>
@@ -474,7 +477,7 @@
     }).join('');
 
     const customContactCards = state.customContactMethods.map((item, index) => `
-      <div class="rowCard contactMethodCard">
+      <div class="rowCard contactMethodCard compactCard">
         <div class="contactMethodTop">
           <div class="methodTitle">
             <span class="iconBadge" aria-hidden="true">${escapeHtml(item.badge || 'CU')}</span>
@@ -483,15 +486,18 @@
               <div class="muted small">Additional contact method</div>
             </div>
           </div>
-          ${checkboxField('Include', `customContactMethods[${index}].enabled`, Boolean(item.enabled))}
+          <label class="miniToggle">
+            <input type="checkbox" name="customContactMethods[${index}].enabled" ${item.enabled ? 'checked' : ''} />
+            <span>Include</span>
+          </label>
         </div>
-        <div class="fieldGrid contactCustomGrid">
+        <div class="fieldGrid contactCustomGrid compactFieldGrid">
           ${textField('Label', `customContactMethods[${index}].label`, item.label)}
           ${textField('Badge', `customContactMethods[${index}].badge`, item.badge)}
           ${textField('Value', `customContactMethods[${index}].value`, item.value, 'text', true)}
           ${textField('Link (optional)', `customContactMethods[${index}].link`, item.link, 'url', true)}
         </div>
-        <div class="helperStrip"><button class="ghostBtn" type="button" data-remove-custom-contact="${index}">Remove method</button></div>
+        <div class="helperStrip compactActions"><button class="ghostBtn" type="button" data-remove-custom-contact="${index}">Remove method</button></div>
       </div>`).join('');
 
     const imageCards = state.images.map((img, index) => `
@@ -539,8 +545,15 @@
       </div>`).join('');
 
     const hoursCards = state.hoursRows.map((row, index) => `
-      <div class="rowCard hoursCard">
-        <div class="hoursCardHeader">
+      <div class="rowCard hoursCard compactCard">
+        <div class="hoursCardTop">
+          <span class="rowPill">Row ${index + 1}</span>
+          <div class="helperStrip hoursActions compactActions">
+            <button class="ghostBtn" type="button" data-add-hour-below="${index}">Add below</button>
+            <button class="ghostBtn" type="button" data-remove-hour-row="${index}">Remove</button>
+          </div>
+        </div>
+        <div class="hoursCardHeader compactFieldGrid">
           <label class="field">
             <span class="miniLabel">Day</span>
             <input name="hoursRows[${index}].day" value="${escapeHtml(row.day)}" />
@@ -550,27 +563,32 @@
             <input name="hoursRows[${index}].time" value="${escapeHtml(row.time)}" />
           </label>
         </div>
-        <div class="hoursCardBody">
-          <label class="switchItem inlineSwitch">
-            <span class="switchLabel"><input type="checkbox" name="hoursRows[${index}].online" ${row.online ? 'checked' : ''} /> <span>Online</span></span>
+        <div class="hoursMetaRow">
+          <label class="miniToggle">
+            <input type="checkbox" name="hoursRows[${index}].online" ${row.online ? 'checked' : ''} />
+            <span>Online</span>
           </label>
-          <label class="switchItem inlineSwitch">
-            <span class="switchLabel"><input type="checkbox" name="hoursRows[${index}].inPerson" ${row.inPerson ? 'checked' : ''} /> <span>In person</span></span>
-          </label>
-          <label class="field fullField hoursNoteField">
-            <span class="miniLabel">Note</span>
-            <input name="hoursRows[${index}].note" value="${escapeHtml(row.note)}" placeholder="Optional note" />
+          <label class="miniToggle">
+            <input type="checkbox" name="hoursRows[${index}].inPerson" ${row.inPerson ? 'checked' : ''} />
+            <span>In person</span>
           </label>
         </div>
-        <div class="helperStrip hoursActions">
-          <button class="ghostBtn" type="button" data-add-hour-below="${index}">Add below</button>
-          <button class="ghostBtn" type="button" data-remove-hour-row="${index}">Remove</button>
-        </div>
+        <label class="field fullField hoursNoteField">
+          <span class="miniLabel">Note</span>
+          <input name="hoursRows[${index}].note" value="${escapeHtml(row.note)}" placeholder="Optional note" />
+        </label>
       </div>`).join('');
 
     const myHoursCards = state.myHoursRows.map((row, index) => `
-      <div class="rowCard hoursCard">
-        <div class="hoursCardHeader">
+      <div class="rowCard hoursCard compactCard">
+        <div class="hoursCardTop">
+          <span class="rowPill">Row ${index + 1}</span>
+          <div class="helperStrip hoursActions compactActions">
+            <button class="ghostBtn" type="button" data-add-my-hour-below="${index}">Add below</button>
+            <button class="ghostBtn" type="button" data-remove-my-hour-row="${index}">Remove</button>
+          </div>
+        </div>
+        <div class="hoursCardHeader compactFieldGrid">
           <label class="field">
             <span class="miniLabel">Day</span>
             <input name="myHoursRows[${index}].day" value="${escapeHtml(row.day)}" />
@@ -580,22 +598,20 @@
             <input name="myHoursRows[${index}].time" value="${escapeHtml(row.time)}" />
           </label>
         </div>
-        <div class="hoursCardBody">
-          <label class="switchItem inlineSwitch">
-            <span class="switchLabel"><input type="checkbox" name="myHoursRows[${index}].online" ${row.online ? 'checked' : ''} /> <span>Online</span></span>
+        <div class="hoursMetaRow">
+          <label class="miniToggle">
+            <input type="checkbox" name="myHoursRows[${index}].online" ${row.online ? 'checked' : ''} />
+            <span>Online</span>
           </label>
-          <label class="switchItem inlineSwitch">
-            <span class="switchLabel"><input type="checkbox" name="myHoursRows[${index}].inPerson" ${row.inPerson ? 'checked' : ''} /> <span>In person</span></span>
-          </label>
-          <label class="field fullField hoursNoteField">
-            <span class="miniLabel">Note</span>
-            <input name="myHoursRows[${index}].note" value="${escapeHtml(row.note)}" placeholder="Optional note" />
+          <label class="miniToggle">
+            <input type="checkbox" name="myHoursRows[${index}].inPerson" ${row.inPerson ? 'checked' : ''} />
+            <span>In person</span>
           </label>
         </div>
-        <div class="helperStrip hoursActions">
-          <button class="ghostBtn" type="button" data-add-my-hour-below="${index}">Add below</button>
-          <button class="ghostBtn" type="button" data-remove-my-hour-row="${index}">Remove</button>
-        </div>
+        <label class="field fullField hoursNoteField">
+          <span class="miniLabel">Note</span>
+          <input name="myHoursRows[${index}].note" value="${escapeHtml(row.note)}" placeholder="Optional note" />
+        </label>
       </div>`).join('');
 
     const hobbyItems = state.hobbyItems.map((item, index) => `
@@ -763,7 +779,7 @@
             ${textField('Section title', 'hoursTitle', state.hoursTitle)}
             ${textField('Note', 'hoursNote', state.hoursNote, 'text', true)}
           </div>
-          <div class="fieldGrid">${hoursCards}</div>
+          <div class="fieldGrid hoursCardsGrid">${hoursCards}</div>
           <div class="helperStrip" style="margin-top: 12px;"><button class="ghostBtn" type="button" data-add-hour-row>Add hour row</button></div>`)}
 
         ${sectionShell('myHours', 'My hours', 'Your personal availability or tutor-specific schedule.', `
@@ -771,7 +787,7 @@
             ${textField('Section title', 'myHoursTitle', state.myHoursTitle)}
             ${textField('Note', 'myHoursNote', state.myHoursNote, 'text', true)}
           </div>
-          <div class="fieldGrid">${myHoursCards}</div>
+          <div class="fieldGrid hoursCardsGrid">${myHoursCards}</div>
           <div class="helperStrip" style="margin-top: 12px;"><button class="ghostBtn" type="button" data-add-my-hour-row>Add my-hours row</button></div>`)}
 
         ${sectionShell('hobby', 'Hobby section', 'Optional. Keep it small and human.', hobbySection)}

@@ -387,6 +387,73 @@ input:focus, textarea:focus, select:focus, button:focus, a:focus {
 .contactCustomGrid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
+
+.compactCard {
+  padding: 12px;
+}
+.compactFieldStack,
+.compactFieldGrid {
+  gap: 10px;
+}
+.compactActions .ghostBtn,
+.miniToggle {
+  min-height: 34px;
+  padding: 6px 10px;
+  border-radius: 999px;
+}
+.miniToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-alt);
+  color: var(--text);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+.miniToggle input {
+  width: auto;
+  margin: 0;
+}
+.contactGrid {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+.contactCustomGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.hoursCardsGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+.hoursCard {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.hoursCardTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+.rowPill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+.hoursMetaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 .contactBadge {
   display: flex;
   gap: 10px;
@@ -475,8 +542,8 @@ input:focus, textarea:focus, select:focus, button:focus, a:focus {
 
 @media (max-width: 760px) {
   .siteHeader { flex-direction: column; }
-  .fieldGrid, .rowGrid, .rowGrid.three, .imageGrid, .serviceGrid, .sectionHeaderGrid, .topGrid, .swatchGrid, .sectionToggleGrid, .contactCustomGrid, .hoursCardHeader, .hoursCardBody { grid-template-columns: 1fr; }
-  .contactMethodTop { flex-direction: column; align-items: stretch; }
+  .fieldGrid, .rowGrid, .rowGrid.three, .imageGrid, .serviceGrid, .sectionHeaderGrid, .topGrid, .swatchGrid, .sectionToggleGrid, .contactCustomGrid, .hoursCardHeader, .hoursCardBody, .hoursCardsGrid { grid-template-columns: 1fr; }
+  .contactMethodTop, .hoursCardTop { flex-direction: column; align-items: stretch; }
   .sectionActions, .palettePanelHead { justify-content: flex-start; }
   .previewFrame { min-height: 620px; }
   .outputBox { min-height: 300px; }
