@@ -1,12 +1,19 @@
 (() => {
-  const STORAGE_KEY = 'embedded-tutor-canvas-generator:v6';
+  const STORAGE_KEY = 'embedded-tutor-canvas-generator:v7';
+  const STATE_EXPORT_KIND = 'embedded-tutor-canvas-generator-state';
+  const STATE_EXPORT_VERSION = 1;
+  const LEGACY_STORAGE_KEYS = ['embedded-tutor-canvas-generator:v6'];
   const outputEl = document.querySelector('[data-output]');
   const previewEl = document.querySelector('[data-preview]');
   const editorEl = document.querySelector('#editor');
   const statusEl = document.querySelector('[data-status]');
+  const saveMetaEl = document.querySelector('[data-save-meta]');
   const resetBtn = document.querySelector('[data-action="reset"]');
   const copyBtns = [...document.querySelectorAll('[data-action^="copy-html"]')];
   const downloadBtn = document.querySelector('[data-action="download-html"]');
+  const exportStateBtn = document.querySelector('[data-action="export-state"]');
+  const importStateBtn = document.querySelector('[data-action="import-state"]');
+  const importStateInput = document.querySelector('[data-import-state-input]');
 
   const termLabels = { fall: 'Fall', spring: 'Spring', summer: 'Summer' };
 
@@ -187,73 +194,139 @@
     };
   };
 
-  const saveState = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const hydrateState = (parsed = {}) => {
+    const defaults = defaultState();
+    const presetName = ['spring', 'summer', 'fall', 'custom'].includes(parsed.palettePreset) ? parsed.palettePreset : defaults.palettePreset;
+    const preset = presetName === 'custom' ? {} : presets[presetName];
+    return {
+      ...defaults,
+      ...parsed,
+      term: ['fall', 'spring', 'summer'].includes(parsed.term) ? parsed.term : defaults.term,
+      palettePreset: presetName,
+      editorTheme: ['dark', 'light'].includes(parsed.editorTheme) ? parsed.editorTheme : defaults.editorTheme,
+      pageBg: String(parsed.pageBg ?? preset.pageBg ?? defaults.pageBg),
+      surface: String(parsed.surface ?? preset.surface ?? defaults.surface),
+      surfaceAlt: String(parsed.surfaceAlt ?? preset.surfaceAlt ?? defaults.surfaceAlt),
+      text: String(parsed.text ?? preset.text ?? defaults.text),
+      muted: String(parsed.muted ?? preset.muted ?? defaults.muted),
+      border: String(parsed.border ?? preset.border ?? defaults.border),
+      accent: String(parsed.accent ?? preset.accent ?? defaults.accent),
+      accent2: String(parsed.accent2 ?? preset.accent2 ?? defaults.accent2),
+      heroStart: String(parsed.heroStart ?? preset.heroStart ?? defaults.heroStart),
+      heroMid: String(parsed.heroMid ?? preset.heroMid ?? defaults.heroMid),
+      heroEnd: String(parsed.heroEnd ?? preset.heroEnd ?? defaults.heroEnd),
+      heroText: String(parsed.heroText ?? preset.heroText ?? defaults.heroText),
+      sections: { ...defaults.sections, ...(parsed.sections || {}) },
+      contactMethods: {
+        email: { enabled: Boolean(parsed.contactMethods?.email?.enabled ?? defaults.contactMethods.email.enabled), value: String(parsed.contactMethods?.email?.value ?? defaults.contactMethods.email.value) },
+        discord: { enabled: Boolean(parsed.contactMethods?.discord?.enabled ?? defaults.contactMethods.discord.enabled), value: String(parsed.contactMethods?.discord?.value ?? defaults.contactMethods.discord.value) },
+        canvas: { enabled: Boolean(parsed.contactMethods?.canvas?.enabled ?? defaults.contactMethods.canvas.enabled), value: String(parsed.contactMethods?.canvas?.value ?? defaults.contactMethods.canvas.value) },
+      },
+      customContactMethods: Array.isArray(parsed.customContactMethods)
+        ? parsed.customContactMethods.slice(0, 8).map((item) => ({
+            enabled: Boolean(item?.enabled),
+            label: String(item?.label ?? ''),
+            badge: String(item?.badge ?? ''),
+            value: String(item?.value ?? ''),
+            link: String(item?.link ?? ''),
+          }))
+        : clone(defaults.customContactMethods),
+      images: Array.isArray(parsed.images)
+        ? parsed.images.slice(0, 4).map((img) => ({ src: String(img?.src ?? ''), alt: String(img?.alt ?? ''), caption: String(img?.caption ?? '') }))
+        : clone(defaults.images),
+      helpItems: Array.isArray(parsed.helpItems) ? parsed.helpItems.slice(0, 8).map((item) => String(item ?? '')) : clone(defaults.helpItems),
+      visitCards: Array.isArray(parsed.visitCards)
+        ? parsed.visitCards.slice(0, 4).map((card) => ({ title: String(card?.title ?? ''), body: String(card?.body ?? '') }))
+        : clone(defaults.visitCards),
+      hoursRows: Array.isArray(parsed.hoursRows)
+        ? parsed.hoursRows.slice(0, 12).map((row) => ({
+            day: String(row?.day ?? ''),
+            time: String(row?.time ?? ''),
+            online: Boolean(row?.online),
+            inPerson: Boolean(row?.inPerson),
+            note: String(row?.note ?? ''),
+          }))
+        : clone(defaults.hoursRows),
+      myHoursTitle: String(parsed.myHoursTitle ?? defaults.myHoursTitle),
+      myHoursNote: String(parsed.myHoursNote ?? defaults.myHoursNote),
+      myHoursRows: Array.isArray(parsed.myHoursRows)
+        ? parsed.myHoursRows.slice(0, 12).map((row) => ({
+            day: String(row?.day ?? ''),
+            time: String(row?.time ?? ''),
+            online: Boolean(row?.online),
+            inPerson: Boolean(row?.inPerson),
+            note: String(row?.note ?? ''),
+          }))
+        : clone(defaults.myHoursRows),
+      hobbyItems: Array.isArray(parsed.hobbyItems) ? parsed.hobbyItems.slice(0, 8).map((item) => String(item ?? '')) : clone(defaults.hobbyItems),
+      customItems: Array.isArray(parsed.customItems) ? parsed.customItems.slice(0, 8).map((item) => String(item ?? '')) : clone(defaults.customItems),
+    };
+  };
+
+  const serializeState = () => clone(state);
+
+  const setSaveMeta = (message) => {
+    if (saveMetaEl) saveMetaEl.textContent = message;
+  };
+
+  const saveState = () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(serializeState()));
+    setSaveMeta(`Local draft saved at ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.`);
+  };
 
   const loadState = () => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(STORAGE_KEY) || LEGACY_STORAGE_KEYS.map((key) => localStorage.getItem(key)).find(Boolean);
       if (!raw) return defaultState();
-      const parsed = JSON.parse(raw);
-      const defaults = defaultState();
-      const presetName = ['spring', 'summer', 'fall', 'custom'].includes(parsed.palettePreset) ? parsed.palettePreset : defaults.palettePreset;
-      const preset = presetName === 'custom' ? {} : presets[presetName];
-      return {
-        ...defaults,
-        ...parsed,
-        term: ['fall', 'spring', 'summer'].includes(parsed.term) ? parsed.term : defaults.term,
-        palettePreset: presetName,
-        pageBg: String(parsed.pageBg ?? preset.pageBg ?? defaults.pageBg),
-        surface: String(parsed.surface ?? preset.surface ?? defaults.surface),
-        surfaceAlt: String(parsed.surfaceAlt ?? preset.surfaceAlt ?? defaults.surfaceAlt),
-        text: String(parsed.text ?? preset.text ?? defaults.text),
-        muted: String(parsed.muted ?? preset.muted ?? defaults.muted),
-        border: String(parsed.border ?? preset.border ?? defaults.border),
-        accent: String(parsed.accent ?? preset.accent ?? defaults.accent),
-        accent2: String(parsed.accent2 ?? preset.accent2 ?? defaults.accent2),
-        heroStart: String(parsed.heroStart ?? preset.heroStart ?? defaults.heroStart),
-        heroMid: String(parsed.heroMid ?? preset.heroMid ?? defaults.heroMid),
-        heroEnd: String(parsed.heroEnd ?? preset.heroEnd ?? defaults.heroEnd),
-        heroText: String(parsed.heroText ?? preset.heroText ?? defaults.heroText),
-        sections: { ...defaults.sections, ...(parsed.sections || {}) },
-        contactMethods: {
-          email: { enabled: Boolean(parsed.contactMethods?.email?.enabled ?? defaults.contactMethods.email.enabled), value: String(parsed.contactMethods?.email?.value ?? defaults.contactMethods.email.value) },
-          discord: { enabled: Boolean(parsed.contactMethods?.discord?.enabled ?? defaults.contactMethods.discord.enabled), value: String(parsed.contactMethods?.discord?.value ?? defaults.contactMethods.discord.value) },
-          canvas: { enabled: Boolean(parsed.contactMethods?.canvas?.enabled ?? defaults.contactMethods.canvas.enabled), value: String(parsed.contactMethods?.canvas?.value ?? defaults.contactMethods.canvas.value) },
-        },
-        customContactMethods: Array.isArray(parsed.customContactMethods)
-          ? parsed.customContactMethods.slice(0, 8).map((item) => ({
-              enabled: Boolean(item?.enabled),
-              label: String(item?.label ?? ''),
-              badge: String(item?.badge ?? ''),
-              value: String(item?.value ?? ''),
-              link: String(item?.link ?? ''),
-            }))
-          : clone(defaults.customContactMethods),
-        images: Array.isArray(parsed.images)
-          ? parsed.images.slice(0, 4).map((img) => ({ src: String(img?.src ?? ''), alt: String(img?.alt ?? ''), caption: String(img?.caption ?? '') }))
-          : clone(defaults.images),
-        myHoursTitle: String(parsed.myHoursTitle ?? defaults.myHoursTitle),
-        myHoursNote: String(parsed.myHoursNote ?? defaults.myHoursNote),
-        myHoursRows: Array.isArray(parsed.myHoursRows)
-          ? parsed.myHoursRows.slice(0, 8).map((row) => ({
-              day: String(row?.day ?? ''),
-              time: String(row?.time ?? ''),
-              online: Boolean(row?.online),
-              inPerson: Boolean(row?.inPerson),
-              note: String(row?.note ?? ''),
-            }))
-          : clone(defaults.myHoursRows),
-        customItems: Array.isArray(parsed.customItems) ? parsed.customItems.slice(0, 8).map((item) => String(item ?? '')) : clone(defaults.customItems),
-      };
+      return hydrateState(JSON.parse(raw));
     } catch {
       return defaultState();
     }
   };
 
   let state = loadState();
+  let formHandlersBound = false;
+  let saveTimer = null;
 
   const setStatus = (message) => {
     statusEl.textContent = message;
+  };
+
+  const queueSave = () => {
+    if (saveTimer) window.clearTimeout(saveTimer);
+    saveTimer = window.setTimeout(() => {
+      saveTimer = null;
+      saveState();
+    }, 120);
+  };
+
+  const flushSave = () => {
+    if (saveTimer) {
+      window.clearTimeout(saveTimer);
+      saveTimer = null;
+    }
+    saveState();
+  };
+
+  const refreshUi = ({ rerenderEditor = false } = {}) => {
+    if (rerenderEditor) renderEditor();
+    renderPreview();
+    queueSave();
+  };
+
+  const buildExportPayload = () => ({
+    kind: STATE_EXPORT_KIND,
+    version: STATE_EXPORT_VERSION,
+    exportedAt: new Date().toISOString(),
+    state: serializeState(),
+  });
+
+  const importStatePayload = (payload) => {
+    const candidate = payload && payload.kind === STATE_EXPORT_KIND && payload.state ? payload.state : payload;
+    state = hydrateState(candidate || {});
+    renderApp();
+    flushSave();
+    setSaveMeta('Imported draft loaded and saved locally.');
   };
 
   const tipMarkup = (tip) => tip ? `<span class="tipWrap"><button type="button" class="infoTip" title="${escapeHtml(tip)}" aria-label="${escapeHtml(tip)}">i</button><span class="tipBubble">${escapeHtml(tip)}</span></span>` : '';
@@ -1011,174 +1084,133 @@ ${buildFragment()}
   };
 
   const bindForm = () => {
-    const form = document.querySelector('#generator-form');
-    if (!form) return;
+    if (formHandlersBound) return;
+    formHandlersBound = true;
 
-    const rerender = () => {
-      renderEditor();
-      renderPreview();
-    };
-
-    form.addEventListener('input', (event) => {
+    editorEl.addEventListener('input', (event) => {
       const target = event.target;
-      if (!(target instanceof HTMLElement)) return;
+      if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement)) return;
       const name = target.getAttribute('name');
-      if (!name) return;
-      const type = target.getAttribute('type');
-      const isCheckbox = type === 'checkbox';
+      if (!name || target.type === 'file') return;
+
+      const form = editorEl.querySelector('#generator-form');
+      const isCheckbox = target instanceof HTMLInputElement && target.type === 'checkbox';
       if (isCheckbox) applyInput(name, '', target.checked);
       else applyInput(name, target.value, false);
 
       if (name.endsWith('__color')) {
         const baseName = name.slice(0, -7);
         applyInput(baseName, target.value, false);
-        setColorPair(form, baseName, target.value);
+        if (form) setColorPair(form, baseName, target.value);
       }
 
-      if (isCheckbox || name === 'term' || name === 'palettePreset' || name.startsWith('sections.')) {
-        rerender();
-      } else {
-        renderPreview();
-      }
+      const rerenderEditor = isCheckbox || target instanceof HTMLSelectElement || name === 'editorTheme' || name === 'term' || name === 'palettePreset' || name.startsWith('sections.');
+      refreshUi({ rerenderEditor });
     });
 
-    form.addEventListener('change', async (event) => {
+    editorEl.addEventListener('change', async (event) => {
       const target = event.target;
-      if (!(target instanceof HTMLElement)) return;
-      const name = target.getAttribute('name');
-      if (!name) return;
+      if (!(target instanceof HTMLInputElement)) return;
+      if (target.type !== 'file') return;
 
-      if (target.getAttribute('type') === 'file') {
-        const input = target;
-        const idx = Number(input.dataset.imageFile);
-        const file = input.files && input.files[0];
-        if (!file) return;
-        const dataUrl = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(String(reader.result || ''));
-          reader.onerror = () => reject(reader.error);
-          reader.readAsDataURL(file);
-        });
-        state.images[idx].src = dataUrl;
-        if (!state.images[idx].alt) state.images[idx].alt = file.name.replace(/\.[^.]+$/, '');
-        renderEditor();
-        renderPreview();
-        return;
-      }
-
-      if (target.tagName === 'SELECT') {
-        applyInput(name, target.value, false);
-        if (name === 'palettePreset' || name === 'term') {
-          renderEditor();
-          renderPreview();
-        }
-        return;
-      }
-
-      if (name.endsWith('__color')) {
-        const baseName = name.slice(0, -7);
-        applyInput(baseName, target.value, false);
-        renderPreview();
-        return;
-      }
-
-      if (target.getAttribute('type') === 'checkbox') {
-        applyInput(name, '', target.checked);
-        renderPreview();
-      }
+      const idx = Number(target.dataset.imageFile);
+      const file = target.files && target.files[0];
+      if (!file) return;
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+      });
+      if (!state.images[idx]) state.images[idx] = { src: '', alt: '', caption: '' };
+      state.images[idx].src = dataUrl;
+      if (!state.images[idx].alt) state.images[idx].alt = file.name.replace(/\.[^.]+$/, '');
+      refreshUi({ rerenderEditor: true });
+      setStatus(`Loaded image: ${file.name}`);
     });
 
-    const clickMap = [
-      ['[data-add-image]', () => {
+    editorEl.addEventListener('click', (event) => {
+      const button = event.target instanceof HTMLElement ? event.target.closest('button') : null;
+      if (!button) return;
+
+      const dataset = button.dataset;
+      let changed = false;
+
+      if ('addImage' in dataset) {
         if (state.images.length >= 4) return;
         state.images = [...state.images, { src: '', alt: '', caption: '' }];
-        rerender();
-      }],
-      ['[data-remove-image]', (event) => {
-        const index = Number(event.currentTarget.dataset.removeImage);
+        changed = true;
+      } else if ('removeImage' in dataset) {
+        const index = Number(dataset.removeImage);
         state.images.splice(index, 1);
-        rerender();
-      }],
-      ['[data-add-help-item]', () => {
+        if (!state.images.length) state.images = [{ src: '', alt: '', caption: '' }];
+        changed = true;
+      } else if ('addHelpItem' in dataset) {
         state.helpItems = [...state.helpItems, 'New help item'];
-        rerender();
-      }],
-      ['[data-add-visit-card]', () => {
+        changed = true;
+      } else if ('addVisitCard' in dataset) {
         state.visitCards = [...state.visitCards, { title: 'New card', body: 'Edit this text.' }].slice(0, 4);
-        rerender();
-      }],
-      ['[data-remove-visit-card]', (event) => {
-        const index = Number(event.currentTarget.dataset.removeVisitCard);
+        changed = true;
+      } else if ('removeVisitCard' in dataset) {
+        const index = Number(dataset.removeVisitCard);
         if (state.visitCards.length <= 1) return;
         state.visitCards.splice(index, 1);
-        rerender();
-      }],
-      ['[data-add-custom-contact]', () => {
+        changed = true;
+      } else if ('addCustomContact' in dataset) {
         state.customContactMethods = [...state.customContactMethods, { enabled: false, label: 'Custom method', badge: 'CU', value: '', link: '' }];
-        rerender();
-      }],
-      ['[data-remove-custom-contact]', (event) => {
-        const index = Number(event.currentTarget.dataset.removeCustomContact);
+        changed = true;
+      } else if ('removeCustomContact' in dataset) {
+        const index = Number(dataset.removeCustomContact);
         if (state.customContactMethods.length <= 1) {
           state.customContactMethods[0] = { enabled: false, label: '', badge: 'CU', value: '', link: '' };
         } else {
           state.customContactMethods.splice(index, 1);
         }
-        rerender();
-      }],
-      ['[data-add-hour-row]', () => {
+        changed = true;
+      } else if ('addHourRow' in dataset) {
         state.hoursRows = [...state.hoursRows, { day: 'New day', time: 'New time', online: true, inPerson: false, note: '' }];
-        rerender();
-      }],
-      ['[data-add-my-hour-row]', () => {
+        changed = true;
+      } else if ('addMyHourRow' in dataset) {
         state.myHoursRows = [...state.myHoursRows, { day: 'New day', time: 'New time', online: false, inPerson: false, note: '' }];
-        rerender();
-      }],
-      ['[data-add-my-hour-below]', (event) => {
-        const index = Number(event.currentTarget.dataset.addMyHourBelow);
+        changed = true;
+      } else if ('addMyHourBelow' in dataset) {
+        const index = Number(dataset.addMyHourBelow);
         state.myHoursRows.splice(index + 1, 0, { day: 'New day', time: 'New time', online: false, inPerson: false, note: '' });
-        rerender();
-      }],
-      ['[data-remove-my-hour-row]', (event) => {
-        const index = Number(event.currentTarget.dataset.removeMyHourRow);
+        changed = true;
+      } else if ('removeMyHourRow' in dataset) {
+        const index = Number(dataset.removeMyHourRow);
         if (state.myHoursRows.length <= 1) return;
         state.myHoursRows.splice(index, 1);
-        rerender();
-      }],
-      ['[data-add-hour-below]', (event) => {
-        const index = Number(event.currentTarget.dataset.addHourBelow);
+        changed = true;
+      } else if ('addHourBelow' in dataset) {
+        const index = Number(dataset.addHourBelow);
         state.hoursRows.splice(index + 1, 0, { day: 'New day', time: 'New time', online: true, inPerson: false, note: '' });
-        rerender();
-      }],
-      ['[data-remove-hour-row]', (event) => {
-        const index = Number(event.currentTarget.dataset.removeHourRow);
+        changed = true;
+      } else if ('removeHourRow' in dataset) {
+        const index = Number(dataset.removeHourRow);
         if (state.hoursRows.length <= 1) return;
         state.hoursRows.splice(index, 1);
-        rerender();
-      }],
-      ['[data-add-hobby-item]', () => {
+        changed = true;
+      } else if ('addHobbyItem' in dataset) {
         state.hobbyItems = [...state.hobbyItems, 'New hobby item'];
-        rerender();
-      }],
-      ['[data-remove-hobby-item]', () => {
+        changed = true;
+      } else if ('removeHobbyItem' in dataset) {
         if (state.hobbyItems.length <= 1) return;
         state.hobbyItems.pop();
-        rerender();
-      }],
-      ['[data-add-custom-item]', () => {
+        changed = true;
+      } else if ('addCustomItem' in dataset) {
         state.customItems = [...state.customItems, 'New custom bullet'];
-        rerender();
-      }],
-      ['[data-remove-custom-item]', () => {
+        changed = true;
+      } else if ('removeCustomItem' in dataset) {
         if (state.customItems.length <= 1) return;
         state.customItems.pop();
-        rerender();
-      }],
-    ];
+        changed = true;
+      }
 
-    for (const [selector, handler] of clickMap) {
-      form.querySelectorAll(selector).forEach((node) => node.addEventListener('click', handler));
-    }
+      if (!changed) return;
+      event.preventDefault();
+      refreshUi({ rerenderEditor: true });
+    });
   };
 
   const renderApp = () => {
@@ -1186,6 +1218,24 @@ ${buildFragment()}
     renderEditor();
     bindForm();
     renderPreview();
+  };
+
+  const exportState = () => {
+    const blob = new Blob([JSON.stringify(buildExportPayload(), null, 2)], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `embedded-tutor-generator-state-${new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-')}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    setStatus('Exported state file. Send it to yourself and import it on the next device.');
+    setSaveMeta('Draft export complete.');
+  };
+
+  const promptImportState = () => {
+    importStateInput?.click();
   };
 
   const copyHtml = async () => {
@@ -1217,12 +1267,47 @@ ${buildFragment()}
   const reset = () => {
     state = defaultState();
     localStorage.removeItem(STORAGE_KEY);
+    LEGACY_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
     renderApp();
+    flushSave();
     setStatus('Reset to defaults.');
+    setSaveMeta('Local draft reset.');
   };
+
+  importStateInput?.addEventListener('change', async (event) => {
+    const input = event.target;
+    if (!(input instanceof HTMLInputElement)) return;
+    const file = input.files && input.files[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      importStatePayload(JSON.parse(text));
+      setStatus(`Imported state from ${file.name}.`);
+    } catch {
+      setStatus('That file was not a valid generator state export.');
+    } finally {
+      input.value = '';
+    }
+  });
+
+  window.addEventListener('storage', (event) => {
+    if (event.key !== STORAGE_KEY) return;
+    try {
+      state = event.newValue ? hydrateState(JSON.parse(event.newValue)) : defaultState();
+      renderApp();
+      setStatus('Loaded the latest local draft from another tab.');
+      setSaveMeta('Synced from another open tab.');
+    } catch {
+      setStatus('Ignored a broken local draft update from storage.');
+    }
+  });
+
+  window.addEventListener('beforeunload', flushSave);
 
   renderApp();
   copyBtns.forEach((btn) => btn.addEventListener('click', copyHtml));
   downloadBtn?.addEventListener('click', downloadHtml);
+  exportStateBtn?.addEventListener('click', exportState);
+  importStateBtn?.addEventListener('click', promptImportState);
   resetBtn?.addEventListener('click', reset);
 })();

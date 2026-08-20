@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Embedded Tutor Canvas Generator</title>
   <meta name="description" content="Generate a clean, accessible Canvas page for embedded tutors with editable defaults and copyable HTML." />
-  <link rel="stylesheet" href="./style.css?v=19" />
+  <link rel="stylesheet" href="./style.css?v=21" />
 </head>
 <body>
   <a class="skipLink" href="#app">Skip to content</a>
@@ -19,7 +19,7 @@
       <span class="pill">Accessible defaults</span>
       <span class="pill">Editable hours</span>
       <span class="pill">Copy HTML</span>
-      <span class="pill">Local download</span>
+      <span class="pill">State transfer</span>
     </div>
   </header>
 
@@ -30,7 +30,8 @@
         <li>Adjust the tutor details, contact info, colors, images, and hours.</li>
         <li>Turn sections on or off so the page stays focused.</li>
         <li>Check the live preview for spacing and contrast.</li>
-        <li>Copy the Canvas HTML or download a full local page.</li>
+        <li>Copy the Canvas HTML, download a full local page, or export the draft state.</li>
+        <li>Import a saved draft on another device if you have to switch mid-edit.</li>
         <li>Save in Canvas, then publish when it looks right.</li>
       </ol>
     </section>
@@ -71,11 +72,15 @@
         </div>
         <div class="buttonRow">
           <button class="ghostBtn" type="button" data-action="download-html">Download full HTML</button>
+          <button class="ghostBtn" type="button" data-action="export-state">Export draft state</button>
+          <button class="ghostBtn" type="button" data-action="import-state">Import draft state</button>
           <button class="ghostBtn" type="button" data-action="copy-html-secondary">Copy again</button>
         </div>
       </div>
       <textarea class="outputBox" readonly spellcheck="false" aria-label="Generated HTML output" data-output></textarea>
-      <p class="status" role="status" aria-live="polite" data-status>Loaded. Edit anything and the preview updates automatically.</p>
+      <div class="transferNote notice">Drafts autosave in this browser. Use <strong>Export draft state</strong> before switching devices, then <strong>Import draft state</strong> on the next one.</div>
+      <p class="saveMeta" data-save-meta>Local draft ready.</p>
+      <p class="status" role="status" aria-live="polite" data-status>Loaded. Edit anything and the preview updates automatically and saves locally.</p>
     </section>
 
     <section id="instructions" class="card guideCard" aria-labelledby="guide-title">
@@ -93,8 +98,9 @@
         <li>If Canvas strips anything, regenerate and keep the page simple.</li>
       </ol>
     </section>
+    <input type="file" accept="application/json,.json" data-import-state-input hidden />
   </main>
 
-  <script src="./app.js?v=19" defer></script>
+  <script src="./app.js?v=21" defer></script>
 </body>
 </html>

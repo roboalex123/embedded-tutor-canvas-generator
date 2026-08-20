@@ -449,3 +449,9 @@ input:focus, textarea:focus, select:focus, button:focus, a:focus {
   .outputBox { min-height: 360px; }
   .colorPair { grid-template-columns: 18px 40px 1fr; }
 }
+
+.transferNote { margin-top: 14px; }
+.outputCard .buttonRow { align-items: center; }
+.outputCard .ghostBtn { white-space: nowrap; }
+
+.saveMeta { margin: 10px 0 0; color: var(--muted); font-size: 0.92rem; }
