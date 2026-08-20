@@ -55,6 +55,22 @@
     { key: 'closingNote', label: 'Closing note', note: 'Final line at the bottom' },
   ];
 
+  const defaultEditorPanels = {
+    siteSetup: true,
+    hero: true,
+    contact: true,
+    quickAccess: true,
+    images: false,
+    help: true,
+    services: false,
+    hours: true,
+    myHours: false,
+    hobby: false,
+    custom: false,
+    pet: false,
+    closingNote: false,
+  };
+
   const defaultContactMethods = [
     { key: 'email', label: 'Email', badge: 'EM', hrefPrefix: 'mailto:' },
     { key: 'discord', label: 'Discord', badge: 'DC', hrefPrefix: null },
@@ -91,6 +107,8 @@
       pet: false,
       closingNote: true,
     },
+    editorPanels: clone(defaultEditorPanels),
+    setupPaletteOpen: false,
     pageTitle: 'Meet Your Embedded Tutor',
     eyebrow: 'Tutorial Center · Embedded Tutor',
     tutorName: 'Robert Voss',
@@ -217,6 +235,8 @@
       heroEnd: String(parsed.heroEnd ?? preset.heroEnd ?? defaults.heroEnd),
       heroText: String(parsed.heroText ?? preset.heroText ?? defaults.heroText),
       sections: { ...defaults.sections, ...(parsed.sections || {}) },
+      editorPanels: { ...defaults.editorPanels, ...(parsed.editorPanels || {}) },
+      setupPaletteOpen: Boolean(parsed.setupPaletteOpen ?? defaults.setupPaletteOpen),
       contactMethods: {
         email: { enabled: Boolean(parsed.contactMethods?.email?.enabled ?? defaults.contactMethods.email.enabled), value: String(parsed.contactMethods?.email?.value ?? defaults.contactMethods.email.value) },
         discord: { enabled: Boolean(parsed.contactMethods?.discord?.enabled ?? defaults.contactMethods.discord.enabled), value: String(parsed.contactMethods?.discord?.value ?? defaults.contactMethods.discord.value) },
@@ -372,17 +392,61 @@
       ${note ? `<small>${escapeHtml(note)}</small>` : ''}
     </label>`;
 
-  const sectionShell = (key, title, note, contentHtml) => `
-    <section class="fieldGroup card ${state.sections[key] ? '' : 'disabled'}">
-      <div class="sectionHead sectionLocalHead">
-        <div>
-          <h3>${escapeHtml(title)}</h3>
-          ${note ? `<p class="groupNote">${escapeHtml(note)}</p>` : ''}
+  const compactCount = (items, noun) => `${items} ${noun}${items === 1 ? '' : 's'}`;
+
+  const sectionSummary = (key) => {
+    switch (key) {
+      case 'hero':
+        return state.tutorName ? `Tutor: ${state.tutorName}` : 'Top-of-page intro';
+      case 'contact':
+        return `${compactCount(defaultContactMethods.filter((def) => state.contactMethods[def.key]?.enabled).length, 'default method')}, ${compactCount(state.customContactMethods.filter((item) => item.enabled && (item.label || item.value)).length, 'custom')}`;
+      case 'quickAccess':
+        return [state.zoomUrl && 'Zoom', state.inPersonLocation && 'Location', state.canvasUrl && 'Canvas link'].filter(Boolean).join(' · ') || 'Zoom, location, and Canvas links';
+      case 'images':
+        return `${compactCount(state.images.filter((img) => String(img.src || '').trim()).length, 'image slot')} ready`;
+      case 'help':
+        return `${compactCount(state.helpItems.filter((item) => String(item || '').trim()).length, 'help bullet')}`;
+      case 'services':
+        return `${compactCount(state.visitCards.filter((card) => card.title || card.body).length, 'service card')}`;
+      case 'hours':
+        return `${compactCount(state.hoursRows.filter((row) => row.day || row.time).length, 'hours row')}`;
+      case 'myHours':
+        return `${compactCount(state.myHoursRows.filter((row) => row.day || row.time).length, 'hours row')}`;
+      case 'hobby':
+        return `${compactCount(state.hobbyItems.filter((item) => String(item || '').trim()).length, 'hobby item')}`;
+      case 'custom':
+        return `${compactCount(state.customItems.filter((item) => String(item || '').trim()).length, 'custom bullet')}`;
+      case 'pet':
+        return state.petName ? `Mascot: ${state.petName}` : 'Optional mascot block';
+      case 'closingNote':
+        return state.closingNote ? 'Final call-to-action' : 'Short closing line';
+      default:
+        return '';
+    }
+  };
+
+  const sectionShell = (key, title, note, contentHtml) => {
+    const enabled = Boolean(state.sections[key]);
+    const open = Boolean(state.editorPanels?.[key]);
+    const summary = sectionSummary(key);
+    return `
+      <section class="fieldGroup card editorSection ${enabled ? '' : 'disabled'} ${open ? 'isOpen' : 'isCollapsed'}">
+        <div class="sectionHead sectionLocalHead">
+          <div class="sectionHeadMain">
+            <div>
+              <h3>${escapeHtml(title)}</h3>
+              ${note ? `<p class="groupNote">${escapeHtml(note)}</p>` : ''}
+            </div>
+            ${summary ? `<p class="sectionSummary">${escapeHtml(summary)}</p>` : ''}
+          </div>
+          <div class="sectionActions">
+            <button class="ghostBtn sectionToggleBtn" type="button" data-toggle-panel="${escapeHtml(key)}" aria-expanded="${open ? 'true' : 'false'}">${open ? 'Collapse' : 'Expand'}</button>
+            ${checkboxField('Show section', `sections.${key}`, enabled)}
+          </div>
         </div>
-        ${checkboxField('Show section', `sections.${key}`, Boolean(state.sections[key]))}
-      </div>
-      ${state.sections[key] ? contentHtml : '<div class="sectionOffNote">Turn this section on to edit it.</div>'}
-    </section>`;
+        ${enabled ? `<div class="sectionBody ${open ? '' : 'isHidden'}">${contentHtml}</div>` : '<div class="sectionOffNote">Turn this section on to edit it.</div>'}
+      </section>`;
+  };
 
   const renderEditor = () => {
     const defaultContactCards = defaultContactMethods.map((def) => {
@@ -568,6 +632,10 @@
         <button class="ghostBtn" type="button" data-remove-custom-item>Remove last</button>
       </div>`;
 
+    const paletteSummary = state.palettePreset === 'custom'
+      ? 'Custom palette is active.'
+      : `${escapeHtml(state.palettePreset[0].toUpperCase() + state.palettePreset.slice(1))} preset active. Open the palette only if you need to fine-tune the colors.`;
+
     const petSection = `
       <div class="fieldGrid">
         ${textField('Pet title', 'petTitle', state.petTitle)}
@@ -580,53 +648,67 @@
 
     editorEl.innerHTML = `
       <form id="generator-form" class="editorForm">
-        <section class="fieldGroup card">
+        <section class="fieldGroup card editorSection ${state.editorPanels.siteSetup ? 'isOpen' : 'isCollapsed'}">
           <div class="sectionHead sectionLocalHead">
-            <div>
-              <h3>Site setup</h3>
-              <p class="groupNote">Choose the term, set the editor theme, and build the palette.</p>
+            <div class="sectionHeadMain">
+              <div>
+                <h3>Site setup</h3>
+                <p class="groupNote">Choose the term, set the editor theme, and keep the palette tucked away unless you actually need it.</p>
+              </div>
+              <p class="sectionSummary">${escapeHtml(paletteSummary)}</p>
             </div>
-            <label class="themeChip">
-              <span>Editor</span>
-              <select name="editorTheme" aria-label="Editor theme">
-                <option value="dark" ${state.editorTheme === 'dark' ? 'selected' : ''}>Dark</option>
-                <option value="light" ${state.editorTheme === 'light' ? 'selected' : ''}>Light</option>
-              </select>
-            </label>
+            <div class="sectionActions">
+              <button class="ghostBtn sectionToggleBtn" type="button" data-toggle-panel="siteSetup" aria-expanded="${state.editorPanels.siteSetup ? 'true' : 'false'}">${state.editorPanels.siteSetup ? 'Collapse' : 'Expand'}</button>
+              <label class="themeChip">
+                <span>Editor</span>
+                <select name="editorTheme" aria-label="Editor theme">
+                  <option value="dark" ${state.editorTheme === 'dark' ? 'selected' : ''}>Dark</option>
+                  <option value="light" ${state.editorTheme === 'light' ? 'selected' : ''}>Light</option>
+                </select>
+              </label>
+            </div>
           </div>
-          <div class="fieldGrid topGrid">
-            <label class="field">
-              <span class="labelText">Term</span>
-              <select name="term">
-                <option value="fall" ${state.term === 'fall' ? 'selected' : ''}>Fall</option>
-                <option value="spring" ${state.term === 'spring' ? 'selected' : ''}>Spring</option>
-                <option value="summer" ${state.term === 'summer' ? 'selected' : ''}>Summer</option>
-              </select>
-            </label>
-            <label class="field">
-              <span class="labelText">Color preset</span>
-              <select name="palettePreset">
-                <option value="spring" ${state.palettePreset === 'spring' ? 'selected' : ''}>Spring</option>
-                <option value="summer" ${state.palettePreset === 'summer' ? 'selected' : ''}>Summer</option>
-                <option value="fall" ${state.palettePreset === 'fall' ? 'selected' : ''}>Fall</option>
-                <option value="custom" ${state.palettePreset === 'custom' ? 'selected' : ''}>Custom</option>
-              </select>
-            </label>
-            <div class="setupNote">Everything below is editable. Nothing here is sacred.</div>
-          </div>
-          <div class="fieldGrid swatchGrid" style="margin-top: 12px;">
-            ${colorField('Hero start', 'heroStart', state.heroStart, 'Left side of the hero gradient.')}
-            ${colorField('Hero middle', 'heroMid', state.heroMid, 'Middle gradient stop.')}
-            ${colorField('Hero end', 'heroEnd', state.heroEnd, 'Right side of the hero gradient.')}
-            ${colorField('Hero text', 'heroText', state.heroText, 'Text used inside the hero banner.')}
-            ${colorField('Accent', 'accent', state.accent, 'Primary link and highlight color.')}
-            ${colorField('Accent 2', 'accent2', state.accent2, 'Secondary accent used in small labels.')}
-            ${colorField('Page background', 'pageBg', state.pageBg, 'Outer page background around the card.')}
-            ${colorField('Surface', 'surface', state.surface, 'Main card background.')}
-            ${colorField('Surface alt', 'surfaceAlt', state.surfaceAlt, 'Alternate block background.')}
-            ${colorField('Text', 'text', state.text, 'Main body text color.')}
-            ${colorField('Muted text', 'muted', state.muted, 'Subtle helper text color.')}
-            ${colorField('Border', 'border', state.border, 'Border lines and outlines.')}
+          <div class="sectionBody ${state.editorPanels.siteSetup ? '' : 'isHidden'}">
+            <div class="fieldGrid topGrid">
+              <label class="field">
+                <span class="labelText">Term</span>
+                <select name="term">
+                  <option value="fall" ${state.term === 'fall' ? 'selected' : ''}>Fall</option>
+                  <option value="spring" ${state.term === 'spring' ? 'selected' : ''}>Spring</option>
+                  <option value="summer" ${state.term === 'summer' ? 'selected' : ''}>Summer</option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="labelText">Color preset</span>
+                <select name="palettePreset">
+                  <option value="spring" ${state.palettePreset === 'spring' ? 'selected' : ''}>Spring</option>
+                  <option value="summer" ${state.palettePreset === 'summer' ? 'selected' : ''}>Summer</option>
+                  <option value="fall" ${state.palettePreset === 'fall' ? 'selected' : ''}>Fall</option>
+                  <option value="custom" ${state.palettePreset === 'custom' ? 'selected' : ''}>Custom</option>
+                </select>
+              </label>
+              <div class="setupNote">The content editor comes first. Open the palette only if the preset is close but not quite right.</div>
+            </div>
+            <div class="palettePanel ${state.setupPaletteOpen ? 'isOpen' : ''}">
+              <div class="helperStrip palettePanelHead">
+                <button class="ghostBtn" type="button" data-toggle-palette aria-expanded="${state.setupPaletteOpen ? 'true' : 'false'}">${state.setupPaletteOpen ? 'Hide palette controls' : 'Customize palette'}</button>
+                <span class="muted small">Hero, text, surface, and border colors live here.</span>
+              </div>
+              <div class="fieldGrid swatchGrid ${state.setupPaletteOpen ? '' : 'isHidden'}" style="margin-top: 12px;">
+                ${colorField('Hero start', 'heroStart', state.heroStart, 'Left side of the hero gradient.')}
+                ${colorField('Hero middle', 'heroMid', state.heroMid, 'Middle gradient stop.')}
+                ${colorField('Hero end', 'heroEnd', state.heroEnd, 'Right side of the hero gradient.')}
+                ${colorField('Hero text', 'heroText', state.heroText, 'Text used inside the hero banner.')}
+                ${colorField('Accent', 'accent', state.accent, 'Primary link and highlight color.')}
+                ${colorField('Accent 2', 'accent2', state.accent2, 'Secondary accent used in small labels.')}
+                ${colorField('Page background', 'pageBg', state.pageBg, 'Outer page background around the card.')}
+                ${colorField('Surface', 'surface', state.surface, 'Main card background.')}
+                ${colorField('Surface alt', 'surfaceAlt', state.surfaceAlt, 'Alternate block background.')}
+                ${colorField('Text', 'text', state.text, 'Main body text color.')}
+                ${colorField('Muted text', 'muted', state.muted, 'Subtle helper text color.')}
+                ${colorField('Border', 'border', state.border, 'Border lines and outlines.')}
+              </div>
+            </div>
           </div>
         </section>
 
@@ -1115,6 +1197,10 @@ ${buildFragment()}
         if (form) setColorPair(form, baseName, target.value);
       }
 
+      if (name === 'palettePreset' && target instanceof HTMLSelectElement) {
+        state.setupPaletteOpen = target.value === 'custom';
+      }
+
       const rerenderEditor = isCheckbox || target instanceof HTMLSelectElement || name === 'editorTheme' || name === 'term' || name === 'palettePreset' || name.startsWith('sections.');
       refreshUi({ rerenderEditor });
     });
@@ -1147,7 +1233,16 @@ ${buildFragment()}
       const dataset = button.dataset;
       let changed = false;
 
-      if ('addImage' in dataset) {
+      if ('togglePanel' in dataset) {
+        const key = dataset.togglePanel;
+        if (key && Object.prototype.hasOwnProperty.call(state.editorPanels, key)) {
+          state.editorPanels[key] = !state.editorPanels[key];
+          changed = true;
+        }
+      } else if ('togglePalette' in dataset) {
+        state.setupPaletteOpen = !state.setupPaletteOpen;
+        changed = true;
+      } else if ('addImage' in dataset) {
         if (state.images.length >= 4) return;
         state.images = [...state.images, { src: '', alt: '', caption: '' }];
         changed = true;
@@ -1220,6 +1315,7 @@ ${buildFragment()}
 
       if (!changed) return;
       event.preventDefault();
+      if (state.palettePreset === 'custom') state.setupPaletteOpen = true;
       refreshUi({ rerenderEditor: true });
     });
   };
@@ -1242,8 +1338,8 @@ ${buildFragment()}
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
-    setStatus('Exported state file. Send it to yourself and import it on the next device.');
-    setSaveMeta('Draft export complete.');
+    setStatus('Exported draft JSON. Send it to yourself and import it on the next device.');
+    setSaveMeta('Draft JSON export complete.');
   };
 
   const promptImportState = () => {
@@ -1254,12 +1350,12 @@ ${buildFragment()}
     const html = outputEl.value || buildFragment();
     try {
       await navigator.clipboard.writeText(html);
-      setStatus('Canvas HTML copied.');
+      setStatus('Canvas fragment copied.');
     } catch {
       outputEl.focus();
       outputEl.select();
       document.execCommand('copy');
-      setStatus('Canvas HTML copied using the fallback selection method.');
+      setStatus('Canvas fragment copied using the fallback selection method.');
     }
   };
 
@@ -1273,7 +1369,7 @@ ${buildFragment()}
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
-    setStatus('Downloaded full local HTML page.');
+    setStatus('Downloaded standalone preview page.');
   };
 
   const reset = () => {
@@ -1296,7 +1392,7 @@ ${buildFragment()}
     try {
       const text = await file.text();
       const saved = importStatePayload(JSON.parse(text));
-      if (saved) setStatus(`Imported state from ${file.name}.`);
+      if (saved) setStatus(`Imported draft JSON from ${file.name}.`);
     } catch {
       setStatus('That file was not a valid generator state export.');
     } finally {
