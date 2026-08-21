@@ -817,9 +817,9 @@
     const defaultHtml = defaultContactMethods.map((def) => {
       const item = state.contactMethods[def.key];
       const enabled = Boolean(item?.enabled);
-      const value = String(item?.value || '');
-      if (!enabled || !value) return makeBadge(def.badge, def.label, value, '');
-      const href = def.key === 'email' ? `mailto:${value}` : value ? `${def.hrefPrefix || ''}${value}` : '';
+      const value = String(item?.value || '').trim();
+      if (!enabled || !value) return '';
+      const href = def.key === 'email' ? `mailto:${value}` : `${def.hrefPrefix || ''}${value}`;
       return makeBadge(def.badge, def.label, value, href);
     }).join('');
 
@@ -836,8 +836,10 @@
 
   const buildFragment = () => {
     const theme = currentTheme();
-    const images = state.images.filter((img) => img.src.trim());
+    const imagesEnabled = Boolean(state.sections.images);
+    const images = imagesEnabled ? state.images.filter((img) => img.src.trim()) : [];
     const heroImage = images[0] || null;
+    const galleryImages = images.slice(1);
     const hoursRows = state.hoursRows.filter((row) => row.day || row.time);
     const myHoursRows = state.myHoursRows.filter((row) => row.day || row.time);
 
@@ -869,6 +871,18 @@
               ${(heroImage.caption || heroImage.alt) ? `<figcaption style="padding:0 2px; margin:0; font-style:italic; font-size:12.5px; line-height:1.35; color:rgba(255,255,255,0.90); text-align:center;">${escapeHtml(heroImage.caption || heroImage.alt)}</figcaption>` : ''}
             </figure>
           </div>` : ''}
+      </section>` : '';
+
+    const galleryHtml = galleryImages.length ? `
+      <section style="margin-top:16px;">
+        <div style="font-size:14px; font-weight:700; margin-bottom:10px; color:var(--text);">Image gallery</div>
+        <div style="display:grid; gap:12px; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));">
+          ${galleryImages.map((img) => `
+            <figure style="margin:0; padding:12px; border-radius:16px; background:var(--surface-alt); border:1px solid var(--border); display:flex; flex-direction:column; gap:10px;">
+              <img src="${escapeHtml(img.src)}" alt="${escapeHtml(img.alt || img.caption || 'Gallery image')}" style="width:100%; height:auto; display:block; border-radius:14px;" />
+              ${(img.caption || img.alt) ? `<figcaption style="margin:0; font-size:12.5px; line-height:1.4; color:var(--muted); text-align:center; font-style:italic;">${escapeHtml(img.caption || img.alt)}</figcaption>` : ''}
+            </figure>`).join('')}
+        </div>
       </section>` : '';
 
     const quickHtml = state.sections.quickAccess ? `
@@ -1010,6 +1024,7 @@
           <div style="margin-top:6px; font-size:14px; color:var(--muted);">${escapeHtml(state.tutorName)} &middot; ${escapeHtml(state.tutorRole)}</div>
         </header>
         ${heroHtml}
+        ${galleryHtml}
         ${quickHtml}
         ${helpHtml}
         ${servicesHtml}
@@ -1070,8 +1085,11 @@ ${buildFragment()}
   const setColorPair = (form, baseName, value) => {
     const textInput = form.querySelector(`input[name="${CSS.escape(baseName)}"]`);
     const colorInput = form.querySelector(`input[name="${CSS.escape(baseName)}__color"]`);
+    const pair = textInput?.closest('.colorPair') || colorInput?.closest('.colorPair');
+    const preview = pair?.querySelector('.colorPreview');
     if (textInput) textInput.value = value;
     if (colorInput) colorInput.value = value;
+    if (preview instanceof HTMLElement) preview.style.background = value;
   };
 
   const applyInput = (name, value, checked = false) => {
@@ -1201,8 +1219,7 @@ ${buildFragment()}
     if (formHandlersBound) return;
     formHandlersBound = true;
 
-    editorEl.addEventListener('input', (event) => {
-      const target = event.target;
+    const syncField = (target) => {
       if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement)) return;
       const name = target.getAttribute('name');
       if (!name || target.type === 'file') return;
@@ -1216,6 +1233,8 @@ ${buildFragment()}
         const baseName = name.slice(0, -7);
         applyInput(baseName, target.value, false);
         if (form) setColorPair(form, baseName, target.value);
+      } else if (['pageBg', 'surface', 'surfaceAlt', 'text', 'muted', 'border', 'accent', 'accent2', 'heroStart', 'heroMid', 'heroEnd', 'heroText'].includes(name)) {
+        if (form) setColorPair(form, name, target.value);
       }
 
       if (name === 'palettePreset' && target instanceof HTMLSelectElement) {
@@ -1224,27 +1243,33 @@ ${buildFragment()}
 
       const rerenderEditor = isCheckbox || target instanceof HTMLSelectElement || name === 'editorTheme' || name === 'term' || name === 'palettePreset' || name.startsWith('sections.');
       refreshUi({ rerenderEditor });
+    };
+
+    editorEl.addEventListener('input', (event) => {
+      syncField(event.target);
     });
 
     editorEl.addEventListener('change', async (event) => {
       const target = event.target;
-      if (!(target instanceof HTMLInputElement)) return;
-      if (target.type !== 'file') return;
-
-      const idx = Number(target.dataset.imageFile);
-      const file = target.files && target.files[0];
-      if (!file) return;
-      const dataUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result || ''));
-        reader.onerror = () => reject(reader.error);
-        reader.readAsDataURL(file);
-      });
-      if (!state.images[idx]) state.images[idx] = { src: '', alt: '', caption: '' };
-      state.images[idx].src = dataUrl;
-      if (!state.images[idx].alt) state.images[idx].alt = file.name.replace(/\.[^.]+$/, '');
-      refreshUi({ rerenderEditor: true });
-      setStatus(`Loaded image: ${file.name}`);
+      if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement)) return;
+      if (target instanceof HTMLInputElement && target.type === 'file') {
+        const idx = Number(target.dataset.imageFile);
+        const file = target.files && target.files[0];
+        if (!file) return;
+        const dataUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result || ''));
+          reader.onerror = () => reject(reader.error);
+          reader.readAsDataURL(file);
+        });
+        if (!state.images[idx]) state.images[idx] = { src: '', alt: '', caption: '' };
+        state.images[idx].src = dataUrl;
+        if (!state.images[idx].alt) state.images[idx].alt = file.name.replace(/\.[^.]+$/, '');
+        refreshUi({ rerenderEditor: true });
+        setStatus(`Loaded image: ${file.name}`);
+        return;
+      }
+      syncField(target);
     });
 
     editorEl.addEventListener('click', (event) => {
