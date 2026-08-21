@@ -149,7 +149,7 @@
     resourcesNote: 'Whiteboard tables are one of the best tools here. They make it easier to work through problems without feeling locked into the first thing you write.',
     resourcesTip: 'Services and hours can change, so confirm details on the Tutorial Center Canvas.',
     hoursTitle: 'Hours',
-    hoursNote: 'Weekdays can share the same hours across online and in person. Sunday can stay online only.',
+    hoursNote: 'Reuse shared hours where it makes sense. Add notes only when students actually need them.',
     hoursRows: [
       { day: 'Monday', time: '9:00am – 6:00pm', online: true, inPerson: true, note: '' },
       { day: 'Tuesday', time: '9:00am – 9:00pm', online: true, inPerson: true, note: '' },
@@ -397,13 +397,14 @@
   const sectionSummary = (key) => {
     switch (key) {
       case 'hero':
-        return state.tutorName ? `Tutor: ${state.tutorName}` : 'Top-of-page intro';
+        return state.tutorName ? `Tutor: ${state.tutorName}` : 'Top summary';
       case 'contact':
         return `${compactCount(defaultContactMethods.filter((def) => state.contactMethods[def.key]?.enabled).length, 'default method')}, ${compactCount(state.customContactMethods.filter((item) => item.enabled && (item.label || item.value)).length, 'custom')}`;
       case 'quickAccess':
-        return [state.zoomUrl && 'Zoom', state.inPersonLocation && 'Location', state.canvasUrl && 'Canvas link'].filter(Boolean).join(' · ') || 'Zoom, location, and Canvas links';
+        return [state.zoomUrl && 'Zoom', state.inPersonLocation && 'Location', state.canvasUrl && 'Canvas link'].filter(Boolean).join(' · ') || 'Key links';
       case 'images':
-        return `${compactCount(state.images.filter((img) => String(img.src || '').trim()).length, 'image slot')} ready`;
+        const imageCount = state.images.filter((img) => String(img.src || '').trim()).length;
+        return imageCount ? `${compactCount(imageCount, 'image')} added` : 'No images added yet';
       case 'help':
         return `${compactCount(state.helpItems.filter((item) => String(item || '').trim()).length, 'help bullet')}`;
       case 'services':
@@ -419,7 +420,7 @@
       case 'pet':
         return state.petName ? `Mascot: ${state.petName}` : 'Optional mascot block';
       case 'closingNote':
-        return state.closingNote ? 'Final call-to-action' : 'Short closing line';
+        return state.closingNote ? 'Closing line' : 'Short closing line';
       default:
         return '';
     }
@@ -444,7 +445,7 @@
             ${checkboxField('Show section', `sections.${key}`, enabled)}
           </div>
         </div>
-        ${enabled ? `<div class="sectionBody ${open ? '' : 'isHidden'}">${contentHtml}</div>` : '<div class="sectionOffNote">Turn this section on to edit it.</div>'}
+        ${enabled ? `<div class="sectionBody ${open ? '' : 'isHidden'}">${contentHtml}</div>` : '<div class="sectionOffNote">Enable this section to include it in the final page.</div>'}
       </section>`;
   };
 
@@ -649,8 +650,8 @@
       </div>`;
 
     const paletteSummary = state.palettePreset === 'custom'
-      ? 'Custom palette is active.'
-      : `${escapeHtml(state.palettePreset[0].toUpperCase() + state.palettePreset.slice(1))} preset active. Open the palette only if you need to fine-tune the colors.`;
+      ? 'Custom palette selected.'
+      : `${escapeHtml(state.palettePreset[0].toUpperCase() + state.palettePreset.slice(1))} preset selected.`;
 
     const petSection = `
       <div class="fieldGrid">
@@ -669,7 +670,7 @@
             <div class="sectionHeadMain">
               <div>
                 <h3>Site setup</h3>
-                <p class="groupNote">Choose the term, set the editor theme, and keep the palette tucked away unless you actually need it.</p>
+                <p class="groupNote">Set the term, theme, and color preset first. Open the palette only if the preset needs a manual tweak.</p>
               </div>
               <p class="sectionSummary">${escapeHtml(paletteSummary)}</p>
             </div>
@@ -703,12 +704,12 @@
                   <option value="custom" ${state.palettePreset === 'custom' ? 'selected' : ''}>Custom</option>
                 </select>
               </label>
-              <div class="setupNote">The content editor comes first. Open the palette only if the preset is close but not quite right.</div>
+              <div class="setupNote">Start with the content.</div>
             </div>
             <div class="palettePanel ${state.setupPaletteOpen ? 'isOpen' : ''}">
               <div class="helperStrip palettePanelHead">
                 <button class="ghostBtn" type="button" data-toggle-palette aria-expanded="${state.setupPaletteOpen ? 'true' : 'false'}">${state.setupPaletteOpen ? 'Hide palette controls' : 'Customize palette'}</button>
-                <span class="muted small">Hero, text, surface, and border colors live here.</span>
+                <span class="muted small">Hero, text, surface, and border colors.</span>
               </div>
               <div class="fieldGrid swatchGrid ${state.setupPaletteOpen ? '' : 'isHidden'}" style="margin-top: 12px;">
                 ${colorField('Hero start', 'heroStart', state.heroStart, 'Left side of the hero gradient.')}
@@ -728,7 +729,7 @@
           </div>
         </section>
 
-        ${sectionShell('hero', 'Header and intro', 'This is the top block students see first.', `
+        ${sectionShell('hero', 'Header and intro', 'This sets the first impression, so keep it clear and direct.', `
           <div class="fieldGrid">
             ${textField('Page title', 'pageTitle', state.pageTitle)}
             ${textField('Eyebrow', 'eyebrow', state.eyebrow)}
@@ -740,7 +741,7 @@
             ${textField('Intro goal', 'introGoal', state.introGoal, 'text', true)}
           </div>`)}
 
-        ${sectionShell('contact', 'Contact methods', 'Default methods are email, Discord, and Canvas. Custom methods are optional.', `
+        ${sectionShell('contact', 'Contact methods', 'Email, Discord, and Canvas are the default contact lanes. Add anything else only if this tutor actually uses it.', `
           <div class="fieldGrid contactGrid">${defaultContactCards}</div>
           <div class="helperStrip" style="margin-top: 12px;">
             <button class="ghostBtn" type="button" data-add-custom-contact>Add custom method</button>
@@ -748,7 +749,7 @@
           <div class="fieldGrid" style="margin-top: 12px;">${customContactCards}</div>
           <div class="fieldGrid" style="margin-top: 12px;">${textField('Contact tip', 'contactTip', state.contactTip, 'text', true)}</div>`)}
 
-        ${sectionShell('quickAccess', 'Quick access', 'Zoom, location, and the main Canvas page.', `
+        ${sectionShell('quickAccess', 'Quick access', 'Links students will probably look for first.', `
           <div class="fieldGrid">
             ${textField('Zoom URL', 'zoomUrl', state.zoomUrl, 'url', true)}
             ${textField('Zoom ID', 'zoomId', state.zoomId)}
@@ -757,16 +758,16 @@
             ${textField('Canvas link label', 'canvasLabel', state.canvasLabel)}
           </div>`)}
 
-        ${sectionShell('images', 'Images', 'Use one image or a small gallery. URLs or uploads both work.', `
+        ${sectionShell('images', 'Images', 'Use one strong image or a small gallery. URLs and uploads both work.', `
           <div class="fieldGrid">${imageCards || '<p class="muted">No image slots yet.</p>'}</div>
           <div class="helperStrip" style="margin-top: 12px;"><button class="ghostBtn" type="button" data-add-image>Add image</button></div>`)}
 
-        ${sectionShell('help', 'How I can help', 'Short bullets read better than AI filler.', `
+        ${sectionShell('help', 'How I can help', 'Keep these short and specific. Students should be able to skim them fast.', `
           <div class="fieldGrid">${helpItems}</div>
           <div class="helperStrip" style="margin-top: 12px;"><button class="ghostBtn" type="button" data-add-help-item>Add help item</button></div>
           <div class="fieldGrid" style="margin-top: 12px;">${textField('Course note', 'courseNote', state.courseNote, 'textarea', true)}</div>`)}
 
-        ${sectionShell('services', 'What to expect at the Tutorial Center', 'Small service cards that skim well.', `
+        ${sectionShell('services', 'What to expect at the Tutorial Center', 'Use short cards for the main Tutorial Center resources or expectations.', `
           <div class="fieldGrid">${serviceCards}</div>
           <div class="helperStrip" style="margin-top: 12px;"><button class="ghostBtn" type="button" data-add-visit-card>Add service card</button></div>
           <div class="fieldGrid" style="margin-top: 12px;">
@@ -774,7 +775,7 @@
             ${textField('Resources tip', 'resourcesTip', state.resourcesTip, 'text', true)}
           </div>`)}
 
-        ${sectionShell('hours', 'Hours', 'A single hours section with per-row online and in-person toggles.', `
+        ${sectionShell('hours', 'Hours', 'Use one shared hours section here, then toggle online or in-person per row.', `
           <div class="fieldGrid">
             ${textField('Section title', 'hoursTitle', state.hoursTitle)}
             ${textField('Note', 'hoursNote', state.hoursNote, 'text', true)}
@@ -782,7 +783,7 @@
           <div class="fieldGrid hoursCardsGrid">${hoursCards}</div>
           <div class="helperStrip" style="margin-top: 12px;"><button class="ghostBtn" type="button" data-add-hour-row>Add hour row</button></div>`)}
 
-        ${sectionShell('myHours', 'My hours', 'Your personal availability or tutor-specific schedule.', `
+        ${sectionShell('myHours', 'My hours', 'Use this only for tutor-specific availability that should stay separate from center hours.', `
           <div class="fieldGrid">
             ${textField('Section title', 'myHoursTitle', state.myHoursTitle)}
             ${textField('Note', 'myHoursNote', state.myHoursNote, 'text', true)}
@@ -790,13 +791,13 @@
           <div class="fieldGrid hoursCardsGrid">${myHoursCards}</div>
           <div class="helperStrip" style="margin-top: 12px;"><button class="ghostBtn" type="button" data-add-my-hour-row>Add my-hours row</button></div>`)}
 
-        ${sectionShell('hobby', 'Hobby section', 'Optional. Keep it small and human.', hobbySection)}
+        ${sectionShell('hobby', 'Hobby section', 'Optional. Keep it short and personal, not performative.', hobbySection)}
 
-        ${sectionShell('custom', 'Custom section', 'One extra block for whatever does not fit elsewhere.', customSection)}
+        ${sectionShell('custom', 'Custom section', 'One extra block for anything that does not belong in the standard sections.', customSection)}
 
-        ${sectionShell('pet', 'Pet / mascot', 'Optional personality block.', petSection)}
+        ${sectionShell('pet', 'Pet / mascot', 'Optional personality block if this page needs it.', petSection)}
 
-        ${sectionShell('closingNote', 'Closing note', 'Keep the final line short.', `<div class="fieldGrid">${textField('Closing note', 'closingNote', state.closingNote, 'text', true)}</div>`)}
+        ${sectionShell('closingNote', 'Closing note', 'Use one short closing line.', `<div class="fieldGrid">${textField('Closing note', 'closingNote', state.closingNote, 'text', true)}</div>`)}
       </form>`;
   };
 
