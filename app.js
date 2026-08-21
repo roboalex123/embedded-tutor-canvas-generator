@@ -44,7 +44,7 @@
     { key: 'hero', label: 'Header / intro', note: 'Title, intro, first impression' },
     { key: 'contact', label: 'Contact methods', note: 'Email, Discord, Canvas, plus custom methods' },
     { key: 'quickAccess', label: 'Quick access', note: 'Zoom, location, Canvas' },
-    { key: 'images', label: 'Images', note: 'Portraits and gallery' },
+    { key: 'images', label: 'Images', note: 'HTTPS image URLs for hero and gallery' },
     { key: 'help', label: 'How I can help', note: 'Bullets and course note' },
     { key: 'services', label: 'Services / resources', note: 'Tutorial Center cards' },
     { key: 'hours', label: 'Hours', note: 'One section with per-row online / in-person toggles' },
@@ -404,7 +404,7 @@
         return [state.zoomUrl && 'Zoom', state.inPersonLocation && 'Location', state.canvasUrl && 'Canvas link'].filter(Boolean).join(' · ') || 'Key links';
       case 'images':
         const imageCount = state.images.filter((img) => String(img.src || '').trim()).length;
-        return imageCount ? `${compactCount(imageCount, 'image')} added` : 'No images added yet';
+        return imageCount ? `${compactCount(imageCount, 'image URL')} added` : 'No image URLs added yet';
       case 'help':
         return `${compactCount(state.helpItems.filter((item) => String(item || '').trim()).length, 'help bullet')}`;
       case 'services':
@@ -505,8 +505,8 @@
       <div class="rowCard imageRow">
         <div class="rowGrid imageGrid">
           <label class="field">
-            <span class="miniLabel">Image URL or data</span>
-            <input name="images[${index}].src" value="${escapeHtml(img.src)}" placeholder="https://..." />
+            <span class="miniLabel">Image URL</span>
+            <input name="images[${index}].src" value="${escapeHtml(img.src)}" placeholder="https://example.com/image.jpg" />
           </label>
           <label class="field">
             <span class="miniLabel">Alt text</span>
@@ -516,12 +516,9 @@
             <span class="miniLabel">Caption</span>
             <input name="images[${index}].caption" value="${escapeHtml(img.caption)}" placeholder="Optional caption" />
           </label>
-          <label class="field fullField filePicker">
-            <span class="miniLabel">Upload image</span>
-            <input type="file" accept="image/*" data-image-file="${index}" />
-          </label>
           <div class="helperStrip"><button class="ghostBtn" type="button" data-remove-image="${index}">Remove image</button></div>
         </div>
+        <div class="muted small">Use hosted HTTPS image URLs only. Uploads are intentionally disabled for cleaner Canvas output.</div>
       </div>`).join('');
 
     const helpItems = state.helpItems.map((item, index) => `
@@ -1222,7 +1219,7 @@ ${buildFragment()}
     const syncField = (target) => {
       if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement)) return;
       const name = target.getAttribute('name');
-      if (!name || target.type === 'file') return;
+      if (!name) return;
 
       const form = editorEl.querySelector('#generator-form');
       const isCheckbox = target instanceof HTMLInputElement && target.type === 'checkbox';
@@ -1249,27 +1246,8 @@ ${buildFragment()}
       syncField(event.target);
     });
 
-    editorEl.addEventListener('change', async (event) => {
-      const target = event.target;
-      if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement)) return;
-      if (target instanceof HTMLInputElement && target.type === 'file') {
-        const idx = Number(target.dataset.imageFile);
-        const file = target.files && target.files[0];
-        if (!file) return;
-        const dataUrl = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(String(reader.result || ''));
-          reader.onerror = () => reject(reader.error);
-          reader.readAsDataURL(file);
-        });
-        if (!state.images[idx]) state.images[idx] = { src: '', alt: '', caption: '' };
-        state.images[idx].src = dataUrl;
-        if (!state.images[idx].alt) state.images[idx].alt = file.name.replace(/\.[^.]+$/, '');
-        refreshUi({ rerenderEditor: true });
-        setStatus(`Loaded image: ${file.name}`);
-        return;
-      }
-      syncField(target);
+    editorEl.addEventListener('change', (event) => {
+      syncField(event.target);
     });
 
     editorEl.addEventListener('click', (event) => {
