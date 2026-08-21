@@ -113,11 +113,11 @@
     eyebrow: 'Tutorial Center · Embedded Tutor',
     tutorName: 'Robert Voss',
     tutorRole: 'Embedded Tutor',
-    introLead: 'Hi, I’m Robert. I’m the embedded tutor for this course and a STEM tutor at the Clovis Community College Tutorial Center.',
-    introBody: 'I graduated from CCC in Spring 2025 with degrees in Computer Science, Mathematics, Physics, and Engineering-related coursework. I’m also a computer science student at Fresno State. I spend most of my time on CS, math, physics, engineering, and troubleshooting.',
-    introExtra: 'Outside school, I work on underwater robotics, programming projects, photography, and anything that involves building something from scratch.',
-    introGoal: 'If you get stuck, bring the problem, what you’ve tried, and I’ll help you work through it.',
-    contactTip: 'Please include your course, what you tried, and a screenshot or photo if it’s a circuit issue.',
+    introLead: 'Hi, I’m Robert, your embedded tutor for this course and a STEM tutor in the Clovis Community College Tutorial Center.',
+    introBody: 'I graduated from CCC in Spring 2025 after studying computer science, math, physics, and engineering. I now study computer science at Fresno State, and most of my work centers on programming, problem-solving, and technical troubleshooting.',
+    introExtra: 'Outside class, I spend time on underwater robotics, software projects, photography, and other build-heavy projects.',
+    introGoal: 'If you get stuck, bring the problem, what you have tried, and any error details, and we will work through it together.',
+    contactTip: 'Include your course, what you tried, and a screenshot or photo if the issue involves hardware.',
     contactMethods: {
       email: { enabled: true, value: 'rav1@my.scccd.edu' },
       discord: { enabled: true, value: 'vossrobert in your class Discord server' },
@@ -139,17 +139,17 @@
       'Homework support: I can help you choose an approach and catch mistakes, but I will not just hand you the answer',
       'Study sessions: occasional review sessions for exams or harder topics',
     ],
-    courseNote: 'I work with ENGR 6 and CSCI 45, so I can pull from more than one class when something needs a different angle.',
+    courseNote: 'I work across ENGR 6 and CSCI 45, so I can often explain the same issue from more than one angle.',
     visitCards: [
       { title: 'STEM Drop-In', body: 'Walk in during open hours with your assignment, notes, and student ID.' },
       { title: 'Writing and Humanities', body: '30-minute scheduled appointments through the front desk.' },
       { title: 'COMM Lab', body: 'Presentations, structure, delivery, practice, and feedback.' },
       { title: 'PACE', body: 'Support for CHEM 3A and ENGL C1000.' },
     ],
-    resourcesNote: 'Whiteboard tables are one of the best tools here. They make it easier to work through problems without feeling locked into the first thing you write.',
-    resourcesTip: 'Services and hours can change, so confirm details on the Tutorial Center Canvas.',
+    resourcesNote: 'Whiteboard tables make it easier to sketch ideas, test steps, and fix mistakes without getting stuck on the first draft.',
+    resourcesTip: 'Services and hours can change, so check the Tutorial Center Canvas for the latest details.',
     hoursTitle: 'Hours',
-    hoursNote: 'Reuse shared hours where it makes sense. Add notes only when students actually need them.',
+    hoursNote: 'Reuse shared hours when they match. Add row notes only when students need extra context.',
     hoursRows: [
       { day: 'Monday', time: '9:00am – 6:00pm', online: true, inPerson: true, note: '' },
       { day: 'Tuesday', time: '9:00am – 9:00pm', online: true, inPerson: true, note: '' },
@@ -670,7 +670,7 @@
             <div class="sectionHeadMain">
               <div>
                 <h3>Site setup</h3>
-                <p class="groupNote">Set the term, theme, and color preset first. Open the palette only if the preset needs a manual tweak.</p>
+                <p class="groupNote">Set the term, theme, and preset first. Open the palette only if you need to fine-tune the colors.</p>
               </div>
               <p class="sectionSummary">${escapeHtml(paletteSummary)}</p>
             </div>
@@ -729,7 +729,7 @@
           </div>
         </section>
 
-        ${sectionShell('hero', 'Header and intro', 'This sets the first impression, so keep it clear and direct.', `
+        ${sectionShell('hero', 'Header and intro', 'Set the title, intro, and opening tone students see first.', `
           <div class="fieldGrid">
             ${textField('Page title', 'pageTitle', state.pageTitle)}
             ${textField('Eyebrow', 'eyebrow', state.eyebrow)}
@@ -741,7 +741,7 @@
             ${textField('Intro goal', 'introGoal', state.introGoal, 'text', true)}
           </div>`)}
 
-        ${sectionShell('contact', 'Contact methods', 'Email, Discord, and Canvas are the default contact lanes. Add anything else only if this tutor actually uses it.', `
+        ${sectionShell('contact', 'Contact methods', 'Email, Discord, and Canvas are the default contact methods. Add anything else only if this tutor actually uses it.', `
           <div class="fieldGrid contactGrid">${defaultContactCards}</div>
           <div class="helperStrip" style="margin-top: 12px;">
             <button class="ghostBtn" type="button" data-add-custom-contact>Add custom method</button>
@@ -749,7 +749,7 @@
           <div class="fieldGrid" style="margin-top: 12px;">${customContactCards}</div>
           <div class="fieldGrid" style="margin-top: 12px;">${textField('Contact tip', 'contactTip', state.contactTip, 'text', true)}</div>`)}
 
-        ${sectionShell('quickAccess', 'Quick access', 'Links students will probably look for first.', `
+        ${sectionShell('quickAccess', 'Quick access', 'Keep the links students need most in one place.', `
           <div class="fieldGrid">
             ${textField('Zoom URL', 'zoomUrl', state.zoomUrl, 'url', true)}
             ${textField('Zoom ID', 'zoomId', state.zoomId)}
@@ -767,7 +767,7 @@
           <div class="helperStrip" style="margin-top: 12px;"><button class="ghostBtn" type="button" data-add-help-item>Add help item</button></div>
           <div class="fieldGrid" style="margin-top: 12px;">${textField('Course note', 'courseNote', state.courseNote, 'textarea', true)}</div>`)}
 
-        ${sectionShell('services', 'What to expect at the Tutorial Center', 'Use short cards for the main Tutorial Center resources or expectations.', `
+        ${sectionShell('services', 'What to expect at the Tutorial Center', 'Use short cards for the main Tutorial Center services, spaces, or expectations.', `
           <div class="fieldGrid">${serviceCards}</div>
           <div class="helperStrip" style="margin-top: 12px;"><button class="ghostBtn" type="button" data-add-visit-card>Add service card</button></div>
           <div class="fieldGrid" style="margin-top: 12px;">
